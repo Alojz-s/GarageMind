@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties } from 'react'
+import { useLayoutEffect, type CSSProperties } from 'react'
 import { Link } from 'react-router'
 import { useAuth } from '../auth/AuthContext'
 import { accountLinkPath } from '../auth/paths'
@@ -73,26 +73,23 @@ export default function HomePage() {
   const { user } = useAuth()
   const accountPath = accountLinkPath(user)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.querySelector('.garagemind-landing')
     if (!root) {
       return undefined
     }
 
     const nodes = root.querySelectorAll('.gm-reveal')
-    if (nodes.length === 0) {
-      return undefined
-    }
-
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const showAll = () => {
-      nodes.forEach((node) => node.classList.add('gm-reveal--visible'))
-    }
-
-    if (motionQuery.matches) {
-      showAll()
+    if (
+      nodes.length === 0 ||
+      motionQuery.matches ||
+      typeof IntersectionObserver === 'undefined'
+    ) {
       return undefined
     }
+
+    root.classList.add('garagemind-landing--js')
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -109,7 +106,10 @@ export default function HomePage() {
 
     nodes.forEach((node) => observer.observe(node))
 
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      root.classList.remove('garagemind-landing--js')
+    }
   }, [])
 
   return (
@@ -176,8 +176,7 @@ export default function HomePage() {
             <span className="garagemind-featured__heading-accent">Bands</span>
           </h2>
           <p className="garagemind-featured__note gm-reveal" style={revealDelay(1, 80)}>
-            A curated landing preview only. The full band directory lives in the app after you sign
-            in.
+            A taste of the scene. Sign in to browse the full band directory.
           </p>
           <ul className="garagemind-bands">
             {BANDS.map((band, index) => (
@@ -222,6 +221,19 @@ export default function HomePage() {
               </li>
             ))}
           </ol>
+        </div>
+      </section>
+
+      <section className="garagemind-closing" aria-labelledby="closing-heading">
+        <div className="garagemind-container garagemind-closing__inner">
+          <h2 id="closing-heading" className="garagemind-closing__title gm-reveal">
+            Ready to get <span className="garagemind-featured__heading-accent">loud</span>?
+          </h2>
+          <div className="gm-reveal" style={revealDelay(1, 100)}>
+            <Link to={accountPath} className="gm-btn garagemind-cta">
+              JOIN NOW
+            </Link>
+          </div>
         </div>
       </section>
 
