@@ -1,8 +1,11 @@
 import { useEffect, useId, useState } from 'react'
-import { Link, NavLink, Outlet } from 'react-router'
+import { NavLink, Outlet } from 'react-router'
 import { useAuth } from '../auth/AuthContext'
 import { hasPermission } from '../auth/permissions'
 import type { Me } from '../api/auth'
+import Logo from './Logo'
+import { postAuthPath } from '../auth/paths'
+import { formatRoleLabel } from '../messages/apiErrors'
 import '../styles/garagemind.css'
 import '../styles/app.css'
 
@@ -19,8 +22,8 @@ interface NavSections {
 
 function buildNavSections(user: Me): NavSections {
   const app: NavItem[] = []
-  if (hasPermission(user, 'articles.read')) app.push({ to: '/articles', label: 'Bands', end: true })
-  if (hasPermission(user, 'articles.write')) app.push({ to: '/articles/new', label: 'Add band' })
+  if (hasPermission(user, 'bands.read')) app.push({ to: '/bands', label: 'Bands', end: true })
+  if (hasPermission(user, 'bands.write')) app.push({ to: '/bands/new', label: 'Add band' })
 
   const admin: NavItem[] = []
   if (hasPermission(user, 'users.manage')) admin.push({ to: '/admin/users', label: 'Users' })
@@ -95,17 +98,14 @@ export default function Layout() {
                   <span className="app__menu-line" />
                 </button>
               )}
-              <Link
-                to={showMenu ? '/articles' : '/change-password'}
-                className="app__logo"
-                aria-label="GarageMind"
-              >
-                G<span className="app__logo-accent">M</span>
-              </Link>
+              <Logo
+                variant="mark"
+                to={user && showMenu ? postAuthPath(user) : '/change-password'}
+              />
             </div>
             <p className="app__session">
               <span className="app__session-name">{user?.login}</span>
-              <span className="app__session-role">{user?.role}</span>
+              <span className="app__session-role">{user ? formatRoleLabel(user.role) : null}</span>
             </p>
           </div>
         </header>
@@ -135,6 +135,10 @@ export default function Layout() {
                     </>
                   )}
                   <li className="app__nav-divider" aria-hidden />
+                  <NavItemLink
+                    item={{ to: '/', label: 'View site' }}
+                    onNavigate={closeMenu}
+                  />
                   <NavItemLink
                     item={{ to: '/change-password', label: 'Password' }}
                     onNavigate={closeMenu}
