@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { changePassword, fetchPasswordPolicy } from '../api/auth'
 import { ApiError, type Violation } from '../api/client'
+import { formatApiError, formatViolation } from '../messages/apiErrors'
 import { useAuth } from '../auth/AuthContext'
 import Alert from '../components/Alert'
 import PageHeader from '../components/PageHeader'
@@ -32,9 +33,9 @@ export default function ChangePasswordPage() {
     try {
       await changePassword(oldPassword, newPassword, newPasswordConfirm)
       await refreshUser()
-      navigate('/articles', { replace: true })
+      navigate('/bands', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(formatApiError(err))
       setViolations(err instanceof ApiError ? err.violations : [])
     } finally {
       setSubmitting(false)
@@ -94,7 +95,7 @@ export default function ChangePasswordPage() {
         {violations.length > 0 && (
           <ul className="app-hints app-hints--error">
             {violations.map((violation) => (
-              <li key={violation.code}>{violation.message}</li>
+              <li key={violation.code}>{formatViolation(violation)}</li>
             ))}
           </ul>
         )}

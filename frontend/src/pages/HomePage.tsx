@@ -1,5 +1,7 @@
 import { Link } from 'react-router'
 import { useAuth } from '../auth/AuthContext'
+import { accountLinkPath, bandsLinkPath } from '../auth/paths'
+import Logo from '../components/Logo'
 import '../styles/garagemind.css'
 
 const BANDS = [
@@ -22,7 +24,8 @@ const BANDS = [
 
 export default function HomePage() {
   const { user } = useAuth()
-  const accountPath = user ? '/articles' : '/login'
+  const accountPath = accountLinkPath(user)
+  const bandsPath = bandsLinkPath(user)
 
   return (
     <div className="garagemind-landing">
@@ -32,13 +35,11 @@ export default function HomePage() {
         </div>
         <div className="garagemind-container garagemind-hero__shell">
           <header className="garagemind-header">
-            <Link to="/" className="garagemind-logo">
-              GarageMind
-            </Link>
+            <Logo variant="full" to="/" />
             <nav aria-label="Main">
               <ul className="garagemind-nav">
                 <li>
-                  <Link to="/articles">BANDS</Link>
+                  <Link to={bandsPath}>BANDS</Link>
                 </li>
                 <li>
                   <Link to={accountPath}>ACC</Link>
@@ -66,6 +67,10 @@ export default function HomePage() {
             Featured{' '}
             <span className="garagemind-featured__heading-accent">Bands</span>
           </h2>
+          <p className="garagemind-featured__note">
+            A curated landing preview only. The full band directory lives in the app after you sign
+            in.
+          </p>
           <ul className="garagemind-bands">
             {BANDS.map((band) => (
               <li key={band.name} className="garagemind-band-card">
@@ -79,6 +84,9 @@ export default function HomePage() {
               </li>
             ))}
           </ul>
+          <Link to={bandsPath} className="gm-btn garagemind-featured__cta">
+            Browse bands
+          </Link>
         </div>
       </section>
     </div>

@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react'
-import { Link, Navigate } from 'react-router'
-import { ApiError } from '../api/client'
+import { Navigate } from 'react-router'
 import { useAuth } from '../auth/AuthContext'
+import AppLoading from '../components/AppLoading'
+import Logo from '../components/Logo'
+import { postAuthPath } from '../auth/paths'
+import { formatApiError } from '../messages/apiErrors'
 import '../styles/garagemind.css'
-
-const INVALID_CREDENTIALS = 'Invalid username or password.'
 
 export default function LoginPage() {
   const { user, loading, notice, login } = useAuth()
@@ -13,8 +14,8 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  if (loading) return null
-  if (user) return <Navigate to="/articles" replace />
+  if (loading) return <AppLoading variant="landing" />
+  if (user) return <Navigate to={postAuthPath(user)} replace />
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -23,9 +24,7 @@ export default function LoginPage() {
     try {
       await login(loginName, password)
     } catch (err) {
-      // Backend zwraca polski komunikat; dla 401 pokazujemy ujednolicony angielski.
-      if (err instanceof ApiError && err.status === 401) setError(INVALID_CREDENTIALS)
-      else setError(err instanceof Error ? err.message : String(err))
+      setError(formatApiError(err))
       setPassword('')
     } finally {
       setSubmitting(false)
@@ -40,9 +39,7 @@ export default function LoginPage() {
 
       <div className="garagemind-container garagemind-login__shell">
         <header className="garagemind-header garagemind-login__header">
-          <Link to="/" className="garagemind-logo">
-            GarageMind
-          </Link>
+          <Logo variant="full" to="/" />
         </header>
 
         <main className="garagemind-login__main">

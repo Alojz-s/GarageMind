@@ -8,7 +8,7 @@ export default function NotFoundPage() {
       <div className="app-stack app-stack--narrow">
         <section className="app-card app-stack">
           <p className="app-text">The page you are looking for does not exist.</p>
-          <Link to="/articles" className="gm-btn gm-btn--secondary gm-btn--sm">
+          <Link to="/bands" className="gm-btn gm-btn--secondary gm-btn--sm">
             Back to bands
           </Link>
         </section>
