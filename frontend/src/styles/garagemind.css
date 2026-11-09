@@ -1,0 +1,378 @@
+.garagemind-landing {
+  /* Wysokość hero — na desktopie dominuje pierwszy ekran */
+  --gm-hero-min: clamp(22rem, 50vh, 32rem);
+
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Rajdhani', system-ui, sans-serif;
+  color: var(--gm-text);
+  background: var(--gm-bg);
+  overflow-x: hidden;
+}
+
+.garagemind-landing a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.garagemind-landing a.gm-btn {
+  color: #fff;
+}
+
+/* Wspólna siatka: ta sama szerokość i marginesy boczne w całym landingu */
+.garagemind-container {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding-inline: var(--gm-pad);
+}
+
+/* Bardzo szerokie monitory — delikatny limit, żeby karty nie były gigantyczne */
+@media (min-width: 120rem) {
+  .garagemind-container {
+    max-width: 120rem;
+    margin-inline: auto;
+  }
+}
+
+/* Tło na pełną szerokość viewportu — treść trzyma się kontenera powyżej */
+.garagemind-section-bg {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  background: var(--gm-bg);
+  pointer-events: none;
+}
+
+.garagemind-section-bg img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.garagemind-hero__bg img {
+  filter: blur(7.5px);
+}
+
+.garagemind-featured__bg img {
+  object-position: center top;
+  filter: blur(5px);
+}
+
+.garagemind-hero {
+  position: relative;
+  width: 100%;
+  min-height: var(--gm-hero-min);
+  overflow: hidden;
+}
+
+.garagemind-hero__shell {
+  display: flex;
+  flex-direction: column;
+  min-height: var(--gm-hero-min);
+}
+
+.garagemind-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gm-space-md);
+  flex-shrink: 0;
+  padding-top: clamp(1.75rem, 3.5vw, 3.125rem);
+}
+
+.garagemind-logo {
+  margin: 0;
+  font-size: var(--gm-size-logo);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  color: #fff;
+}
+
+.garagemind-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--gm-space-lg);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.garagemind-nav a {
+  font-size: var(--gm-size-nav);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fff;
+  transition: color 0.15s ease;
+}
+
+.garagemind-nav a:hover {
+  color: var(--gm-accent);
+}
+
+.garagemind-hero__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: var(--gm-space-lg) 0 calc(var(--gm-space-xl) * 0.75);
+  text-align: center;
+}
+
+.garagemind-hero__title {
+  margin: 0 0 var(--gm-space-lg);
+  font-size: var(--gm-size-hero);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+/* JOIN NOW — bazowy wygląd w .gm-btn (index.css), tu tylko skala hero */
+.garagemind-cta {
+  padding: 0.875rem 2.6875rem;
+  font-size: var(--gm-size-cta);
+}
+
+.garagemind-featured {
+  position: relative;
+  width: 100%;
+  padding-block: var(--gm-space-xl) calc(var(--gm-space-xl) + var(--gm-space-sm));
+  overflow: hidden;
+}
+
+.garagemind-featured__heading {
+  margin: 0 0 var(--gm-space-xl);
+  font-size: var(--gm-size-section);
+  font-weight: 700;
+  line-height: 1.12;
+  text-align: center;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.garagemind-featured__heading-accent {
+  color: var(--gm-accent);
+}
+
+.garagemind-bands {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--gm-gap-cards);
+  width: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .garagemind-landing {
+    --gm-size-cta: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .garagemind-landing {
+    --gm-hero-min: 100vh;
+    --gm-hero-min: 100dvh;
+    --gm-size-hero: clamp(2.75rem, 3.2vw + 1rem, 3.75rem);
+  }
+}
+
+@media (max-width: 960px) {
+  .garagemind-nav {
+    gap: var(--gm-space-md);
+  }
+
+  .garagemind-bands {
+    grid-template-columns: 1fr;
+  }
+}
+
+.garagemind-band-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gm-space-sm);
+  min-width: 0;
+}
+
+.garagemind-band-card__image {
+  width: 100%;
+  aspect-ratio: 381 / 405;
+  max-height: clamp(15rem, 28vw, 25.3125rem);
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+}
+
+.garagemind-band-card__name {
+  margin: var(--gm-space-sm) 0 0;
+  font-size: var(--gm-size-card-title);
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--gm-card-title);
+}
+
+.garagemind-band-card__description {
+  margin: 0;
+  font-size: var(--gm-size-body);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--gm-text-muted);
+}
+
+/* —— Strona logowania (styl featured / ciemny panel) —— */
+.garagemind-login {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.garagemind-login__bg img {
+  object-position: center top;
+  filter: blur(5px);
+}
+
+.garagemind-login__shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.garagemind-login__header {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.garagemind-login__main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--gm-space-lg) 0 var(--gm-space-xl);
+}
+
+.garagemind-login__panel {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 26.5rem;
+  padding: clamp(1.75rem, 4vw, 2.25rem);
+  border-radius: 12px;
+  background: rgba(16, 16, 16, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.2) inset;
+  backdrop-filter: blur(8px);
+}
+
+.garagemind-login__title {
+  margin: 0;
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.garagemind-login__subtitle {
+  margin: 0.5rem 0 var(--gm-space-lg);
+  font-size: var(--gm-size-body);
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--gm-text-muted);
+}
+
+.garagemind-login__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gm-space-md);
+}
+
+.garagemind-login__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.garagemind-login__label {
+  font-size: var(--gm-size-nav);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--gm-card-title);
+}
+
+.garagemind-login__form input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  font: inherit;
+  font-size: var(--gm-size-body);
+  font-weight: 400;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.garagemind-login__form input::placeholder {
+  color: var(--gm-text-muted);
+}
+
+.garagemind-login__form input:focus {
+  outline: none;
+  border-color: rgba(173, 8, 8, 0.75);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(173, 8, 8, 0.2);
+}
+
+.garagemind-login__notice {
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  border-left: 3px solid var(--gm-accent);
+  border-radius: 6px;
+  font-size: var(--gm-size-body);
+  line-height: 1.45;
+  color: var(--gm-text);
+  background: rgba(173, 8, 8, 0.12);
+}
+
+.garagemind-login__error {
+  margin: 0;
+  font-size: var(--gm-size-body);
+  line-height: 1.45;
+  color: #ffb4b4;
+}
+
+.garagemind-login__submit {
+  margin-top: var(--gm-space-sm);
+  padding-block: 0.875rem;
+  font-size: clamp(1.0625rem, 2vw, 1.25rem);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
