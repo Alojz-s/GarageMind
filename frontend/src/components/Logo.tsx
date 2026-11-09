@@ -17,7 +17,9 @@ export default function Logo({ variant, to, className = '' }: LogoProps) {
   const label = 'GarageMind'
   const body =
     variant === 'full' ? (
-      label
+      <>
+        Garage<span className="app__logo-accent">M</span>ind
+      </>
     ) : (
       <>
         G<span className="app__logo-accent">M</span>
