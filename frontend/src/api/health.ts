@@ -8,7 +8,7 @@ export interface HealthResponse {
 export async function fetchHealth(signal?: AbortSignal): Promise<HealthResponse> {
   const response = await fetch('/api/health', { signal })
 
-  // 503 still carries a JSON body describing which component failed.
+  // Odpowiedź 503 też zawiera JSON z informacją, który składnik zawiódł.
   if (!response.ok && response.status !== 503) {
     throw new Error(`HTTP ${response.status}`)
   }
