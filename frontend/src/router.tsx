@@ -9,8 +9,14 @@ import ChangePasswordPage from './pages/ChangePasswordPage'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import NewArticlePage from './pages/NewArticlePage'
+import NotFoundPage from './pages/NotFoundPage'
+import SystemStatusPage from './pages/SystemStatusPage'
 
 export const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <HomePage />,
+  },
   {
     path: '/login',
     element: <LoginPage />,
@@ -21,7 +27,7 @@ export const router = createBrowserRouter([
       {
         element: <Layout />,
         children: [
-          { path: '/', element: <HomePage /> },
+          { path: '/status', element: <SystemStatusPage /> },
           { path: '/change-password', element: <ChangePasswordPage /> },
           {
             element: <PermissionRoute permission="articles.read" />,
@@ -39,6 +45,7 @@ export const router = createBrowserRouter([
             element: <PermissionRoute permission="settings.manage" />,
             children: [{ path: '/admin/settings', element: <AdminSettingsPage /> }],
           },
+          { path: '*', element: <NotFoundPage /> },
         ],
       },
     ],
