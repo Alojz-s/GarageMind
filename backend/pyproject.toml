@@ -1,7 +1,7 @@
 [project]
-name = "keygate-backend"
+name = "garagemind-backend"
 version = "0.1.0"
-description = "KeyGate - firmowy portal z artykułami (backend)"
+description = "GarageMind - band directory (backend)"
 requires-python = ">=3.14"
 
 [tool.ruff]
