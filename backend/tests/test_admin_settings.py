@@ -124,6 +124,6 @@ def test_invalid_settings_are_rejected(
 
     assert response.status_code == 422
     body = response.json()
-    assert body["detail"] == "Nieprawidłowe dane w żądaniu"
+    assert body["detail"] == "Invalid request data"
     assert [v["code"] for v in body["violations"]] == [code]
     assert getattr(get_security_settings(db_session), field) == DEFAULTS[field]

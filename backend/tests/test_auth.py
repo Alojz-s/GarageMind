@@ -17,7 +17,7 @@ pytestmark = pytest.mark.db
 PASSWORD = "haslo-uzytkownikow-testowych"
 ADMIN_PASSWORD = "haslo-startowe-admina-testy"
 NEW_PASSWORD = "zupelnie-nowe-haslo-po-zmianie"
-LOGIN_FAILED = {"detail": "Login lub hasło niepoprawne"}
+LOGIN_FAILED = {"detail": "Incorrect username or password"}
 
 
 @pytest.fixture
@@ -49,7 +49,7 @@ def test_login_sets_session_cookie_and_me_returns_user(
     body = response.json()
     assert body["login"] == "redaktor"
     assert body["role"] == "Redaktor"
-    assert body["permissions"] == ["articles.read", "articles.write"]
+    assert body["permissions"] == ["bands.read", "bands.write"]
     assert body["must_change_password"] is False
     assert body["idle_timeout_minutes"] == 15
 
@@ -132,14 +132,14 @@ def test_forced_password_change_restricts_session(client: TestClient, db_session
 @pytest.mark.parametrize(
     ("old_password", "new_password", "confirm", "status", "detail", "violations"),
     [
-        ("zle-stare-haslo", NEW_PASSWORD, NEW_PASSWORD, 400, "Obecne hasło jest niepoprawne", []),
-        (PASSWORD, NEW_PASSWORD, "inne", 400, "Powtórzone hasło nie jest identyczne", []),
+        ("zle-stare-haslo", NEW_PASSWORD, NEW_PASSWORD, 400, "Current password is incorrect", []),
+        (PASSWORD, NEW_PASSWORD, "inne", 400, "New password confirmation does not match", []),
         (
             PASSWORD,
             "za-krotkie",
             "za-krotkie",
             422,
-            "Nowe hasło nie spełnia polityki haseł",
+            "New password does not meet the password policy",
             ["too_short"],
         ),
     ],
