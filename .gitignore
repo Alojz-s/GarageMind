@@ -220,6 +220,8 @@ __marimo__/
 .streamlit/secrets.toml
 
 # --- KeyGate ---
+# Lokalne assety Figma, fonty, prompty dla agentów (nie na GitHub)
+/AsTemp/
 # Python / venv
 .venv/
 # Sekrety (wzorzec .env.example pozostaje w repo)
