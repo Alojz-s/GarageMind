@@ -10,7 +10,7 @@ from app.core.database import get_db
 from app.models import SECURITY_SETTINGS_ID, SecuritySettings, User
 from app.services.sessions import find_session, is_idle_expired
 
-SESSION_COOKIE = "keygate_session"
+SESSION_COOKIE = "garagemind_session"
 
 
 class ApiError(Exception):
@@ -33,7 +33,7 @@ def validation_error_handler(_request: Request, exc: RequestValidationError) -> 
     violations = [{"code": error["type"], "message": error["msg"]} for error in exc.errors()]
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-        content={"detail": "Nieprawidłowe dane w żądaniu", "violations": violations},
+        content={"detail": "Invalid request data", "violations": violations},
     )
 
 
@@ -49,7 +49,7 @@ def get_current_user(
     token: Annotated[str | None, Cookie(alias=SESSION_COOKIE)] = None,
 ) -> User:
     not_authenticated = ApiError(
-        status.HTTP_401_UNAUTHORIZED, "Wymagane zalogowanie", "not_authenticated"
+        status.HTTP_401_UNAUTHORIZED, "Not authenticated", "not_authenticated"
     )
     session = find_session(db, token) if token else None
     if session is None:
@@ -61,7 +61,7 @@ def get_current_user(
         db.commit()
         raise ApiError(
             status.HTTP_401_UNAUTHORIZED,
-            "Sesja wygasła z powodu bezczynności",
+            "Session expired due to inactivity",
             "session_expired",
         )
 
@@ -92,7 +92,7 @@ def password_change_required(user: User, settings: SecuritySettings) -> bool:
 def require_full_access(user: CurrentUser, db: Annotated[Session, Depends(get_db)]) -> User:
     if password_change_required(user, get_security_settings(db)):
         raise ApiError(
-            status.HTTP_403_FORBIDDEN, "Wymagana zmiana hasła", "password_change_required"
+            status.HTTP_403_FORBIDDEN, "Password change required", "password_change_required"
         )
     return user
 
@@ -101,7 +101,9 @@ def require_permission(name: str) -> Any:
     def dependency(user: Annotated[User, Depends(require_full_access)]) -> User:
         if all(p.name != name for p in user.role.permissions):
             raise ApiError(
-                status.HTTP_403_FORBIDDEN, "Brak uprawnień do wykonania tej operacji", "forbidden"
+                status.HTTP_403_FORBIDDEN,
+                "You do not have permission for this action",
+                "forbidden",
             )
         return user
 

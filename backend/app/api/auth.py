@@ -32,7 +32,7 @@ from app.services.password_policy import MAX_PASSWORD_LENGTH, describe_policy, v
 from app.services.passwords import DUMMY_PASSWORD_HASH, hash_password, verify_password
 from app.services.sessions import create_session, delete_session
 
-LOGIN_FAILED = "Login lub hasło niepoprawne"
+LOGIN_FAILED = "Incorrect username or password"
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -97,7 +97,9 @@ def change_password(
 ) -> Response:
     if body.new_password != body.new_password_confirm:
         raise ApiError(
-            status.HTTP_400_BAD_REQUEST, "Powtórzone hasło nie jest identyczne", "password_mismatch"
+            status.HTTP_400_BAD_REQUEST,
+            "New password confirmation does not match",
+            "password_mismatch",
         )
     if user.password_hash is None:
         old_password_ok = verify_used_one_time_password(db, user.id, body.old_password)
@@ -105,14 +107,14 @@ def change_password(
         old_password_ok = verify_password(body.old_password, user.password_hash)
     if not old_password_ok:
         raise ApiError(
-            status.HTTP_400_BAD_REQUEST, "Obecne hasło jest niepoprawne", "invalid_old_password"
+            status.HTTP_400_BAD_REQUEST, "Current password is incorrect", "invalid_old_password"
         )
     violations = validate_password(
         body.new_password, db=db, settings=get_security_settings(db), user_id=user.id
     )
     if violations:
         error = PasswordPolicyErrorResponse(
-            detail="Nowe hasło nie spełnia polityki haseł",
+            detail="New password does not meet the password policy",
             violations=[PolicyViolation(code=v.code, message=v.message) for v in violations],
         )
         return JSONResponse(error.model_dump(), status_code=status.HTTP_422_UNPROCESSABLE_CONTENT)

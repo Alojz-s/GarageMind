@@ -61,26 +61,30 @@ def validate_password(
         violations.append(
             Violation(
                 "too_short",
-                f"Hasło jest za krótkie (minimalna długość: {settings.min_password_length}).",
+                f"Password is too short (minimum length: {settings.min_password_length}).",
             )
         )
     if len(plain) > MAX_PASSWORD_LENGTH:
         violations.append(
             Violation(
-                "too_long", f"Hasło jest za długie (maksymalna długość: {MAX_PASSWORD_LENGTH})."
+                "too_long",
+                f"Password is too long (maximum length: {MAX_PASSWORD_LENGTH}).",
             )
         )
     # Bez rozróżniania wielkości liter: „QWERTY…” jest tak samo popularne jak „qwerty…”.
     if plain.casefold() in _banned_passwords():
         violations.append(
-            Violation("common_password", "Hasło jest zbyt popularne (na liście haseł zakazanych).")
+            Violation("common_password", "Password is too common (on the banned password list).")
         )
     if settings.date_rule_enabled:
         if _is_date(plain):
-            violations.append(Violation("is_date", "Hasło nie może być datą."))
+            violations.append(Violation("is_date", "Password cannot be a date."))
         if _YEAR.search(plain):
             violations.append(
-                Violation("contains_year", "Hasło nie może zawierać roku z zakresu 1950–2030.")
+                Violation(
+                    "contains_year",
+                    "Password cannot contain a year between 1950 and 2030.",
+                )
             )
     if user_id is not None and any(
         verify_password(plain, password_hash)
@@ -89,7 +93,7 @@ def validate_password(
         violations.append(
             Violation(
                 "reused_password",
-                f"Hasło musi różnić się od {PASSWORD_HISTORY_SIZE} ostatnio używanych.",
+                f"Password must differ from the last {PASSWORD_HISTORY_SIZE} passwords.",
             )
         )
     return violations
@@ -97,12 +101,12 @@ def validate_password(
 
 def describe_policy(settings: SecuritySettings) -> list[str]:
     requirements = [
-        f"Długość od {settings.min_password_length} do {MAX_PASSWORD_LENGTH} znaków",
-        "Nie może być popularnym hasłem z listy haseł zakazanych",
-        f"Musi różnić się od {PASSWORD_HISTORY_SIZE} ostatnio używanych haseł",
+        f"Length from {settings.min_password_length} to {MAX_PASSWORD_LENGTH} characters",
+        "Must not be a common password from the banned list",
+        f"Must differ from the last {PASSWORD_HISTORY_SIZE} passwords",
     ]
     if settings.date_rule_enabled:
-        requirements.append("Nie może być datą ani zawierać roku z zakresu 1950–2030")
+        requirements.append("Must not be a date or contain a year between 1950 and 2030")
     return requirements
 
 
