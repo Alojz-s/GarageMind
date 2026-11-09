@@ -1,6 +1,9 @@
 .garagemind-landing {
   /* Wysokość sekcji głównej */
   --gm-hero-min: clamp(22rem, 50vh, 32rem);
+  --gm-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --gm-landing-section-gap: var(--gm-space-xl);
+  --gm-landing-heading-gap: var(--gm-space-xl);
 
   margin: 0;
   min-height: 100vh;
@@ -8,6 +11,52 @@
   color: var(--gm-text);
   background: var(--gm-bg);
   overflow-x: hidden;
+}
+
+@keyframes gm-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(1.15rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gm-hero-bg-in {
+  from {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.gm-reveal {
+  opacity: 0;
+  transform: translateY(1.15rem);
+  transition:
+    opacity 0.65s var(--gm-ease-out),
+    transform 0.65s var(--gm-ease-out);
+  transition-delay: var(--gm-reveal-delay, 0ms);
+}
+
+.gm-reveal--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gm-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 
 .garagemind-landing a {
@@ -63,6 +112,28 @@
   filter: blur(7.5px);
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .garagemind-hero__bg img {
+    animation: gm-hero-bg-in 1.15s var(--gm-ease-out) both;
+  }
+
+  .garagemind-hero__enter {
+    animation: gm-fade-up 0.75s var(--gm-ease-out) both;
+  }
+
+  .garagemind-hero__enter--header {
+    animation-delay: 0.05s;
+  }
+
+  .garagemind-hero__enter--tagline {
+    animation-delay: 0.14s;
+  }
+
+  .garagemind-hero__enter--cta {
+    animation-delay: 0.26s;
+  }
+}
+
 .garagemind-featured__bg img {
   object-position: center top;
   filter: blur(5px);
@@ -72,6 +143,7 @@
   position: relative;
   width: 100%;
   min-height: var(--gm-hero-min);
+  padding-bottom: var(--gm-landing-section-gap);
   overflow: hidden;
 }
 
@@ -129,12 +201,32 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: var(--gm-space-lg) 0 calc(var(--gm-space-xl) * 0.75);
+  padding: var(--gm-space-lg) 0 0;
   text-align: center;
 }
 
+.garagemind-landing > .garagemind-bftu,
+.garagemind-landing > .garagemind-featured,
+.garagemind-landing > .garagemind-how-it-works {
+  padding-bottom: var(--gm-landing-section-gap);
+}
+
+.garagemind-landing .garagemind-bftu__inner,
+.garagemind-landing .garagemind-featured__inner,
+.garagemind-landing .garagemind-how-it-works__inner {
+  padding-top: var(--gm-landing-section-gap);
+}
+
+.garagemind-landing > .garagemind-footer {
+  padding-bottom: var(--gm-landing-section-gap);
+}
+
+.garagemind-landing > .garagemind-footer .garagemind-container {
+  padding-top: var(--gm-landing-section-gap);
+}
+
 .garagemind-hero__title {
-  margin: 0 0 var(--gm-space-lg);
+  margin: 0 0 var(--gm-space-md);
   font-size: var(--gm-size-hero);
   font-weight: 700;
   line-height: 1.08;
@@ -143,21 +235,92 @@
   color: #fff;
 }
 
+.garagemind-hero__tagline {
+  margin: 0 0 var(--gm-space-lg);
+  max-width: min(100%, 52rem);
+  font-size: clamp(1.125rem, 1.35vw + 0.75rem, 1.625rem);
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--gm-card-title);
+}
+
+@media (min-width: 56rem) {
+  .garagemind-hero__tagline {
+    white-space: nowrap;
+  }
+}
+
 /* Przycisk w sekcji głównej */
 .garagemind-cta {
   padding: 0.875rem 2.6875rem;
   font-size: var(--gm-size-cta);
 }
 
+.garagemind-bftu {
+  background: var(--gm-bg);
+}
+
+.garagemind-bftu__inner {
+  text-align: center;
+}
+
+.garagemind-bftu__title {
+  margin: 0 0 var(--gm-landing-heading-gap);
+  font-size: clamp(2rem, 2.2vw + 1rem, 3.125rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.garagemind-bftu__columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(3rem, 7vw, 5.5rem) clamp(2.5rem, 8vw, 7rem);
+  width: 100%;
+  max-width: 58rem;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.garagemind-bftu__column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gm-space-md);
+}
+
+.garagemind-bftu__column:nth-child(even) {
+  margin-top: clamp(2rem, 5vw, 4.5rem);
+}
+
+.garagemind-bftu__column-title {
+  margin: 0;
+  font-size: clamp(1.3125rem, 1.15vw + 1rem, 2rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.garagemind-bftu__column-body {
+  margin: 0;
+  font-size: clamp(1.0625rem, 0.55vw + 0.95rem, 1.375rem);
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--gm-text-muted);
+}
+
 .garagemind-featured {
   position: relative;
   width: 100%;
-  padding-block: var(--gm-space-xl) calc(var(--gm-space-xl) + var(--gm-space-sm));
   overflow: hidden;
 }
 
 .garagemind-featured__heading {
-  margin: 0 0 var(--gm-space-xl);
+  margin: 0 0 var(--gm-landing-heading-gap);
   font-size: var(--gm-size-section);
   font-weight: 700;
   line-height: 1.12;
@@ -172,19 +335,13 @@
 }
 
 .garagemind-featured__note {
-  margin: calc(-1 * var(--gm-space-md)) 0 var(--gm-space-lg);
+  margin: 0 0 var(--gm-landing-heading-gap);
   max-width: 36rem;
   margin-inline: auto;
   font-size: var(--gm-size-body);
   line-height: 1.5;
   text-align: center;
   color: var(--gm-text-muted);
-}
-
-.garagemind-featured__cta {
-  display: block;
-  width: fit-content;
-  margin: var(--gm-space-xl) auto 0;
 }
 
 .garagemind-public-404__actions {
@@ -227,6 +384,16 @@
   .garagemind-bands {
     grid-template-columns: 1fr;
   }
+
+  .garagemind-bftu__columns {
+    grid-template-columns: 1fr;
+    max-width: 28rem;
+    text-align: left;
+  }
+
+  .garagemind-bftu__column:nth-child(even) {
+    margin-top: 0;
+  }
 }
 
 .garagemind-band-card {
@@ -243,6 +410,14 @@
   border-radius: 8px;
   object-fit: cover;
   display: block;
+  transition: transform 0.4s var(--gm-ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .garagemind-band-card:hover .garagemind-band-card__image,
+  .garagemind-band-card:focus-within .garagemind-band-card__image {
+    transform: scale(1.035);
+  }
 }
 
 .garagemind-band-card__name {
@@ -258,6 +433,189 @@
   font-size: var(--gm-size-body);
   font-weight: 400;
   line-height: 1.5;
+  color: var(--gm-text-muted);
+}
+
+.garagemind-how-it-works {
+  background: var(--gm-bg);
+}
+
+.garagemind-how-it-works__inner {
+  text-align: center;
+}
+
+.garagemind-how-it-works__heading {
+  margin: 0 0 var(--gm-space-sm);
+  font-size: var(--gm-size-section);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.garagemind-how-it-works__subheading {
+  margin: 0 0 var(--gm-landing-heading-gap);
+  max-width: 36rem;
+  margin-inline: auto;
+  font-size: var(--gm-size-body);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--gm-text-muted);
+}
+
+.garagemind-timeline {
+  --gm-timeline-track-start: 12.5%;
+  --gm-timeline-track-end: 87.5%;
+
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--gm-space-lg);
+  width: 100%;
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: var(--gm-space-xs) 0 var(--gm-space-xs) var(--gm-space-md);
+  list-style: none;
+  text-align: left;
+}
+
+.garagemind-timeline::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  left: 0.4rem;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(173, 8, 8, 0.35) 10%,
+    rgba(173, 8, 8, 0.4) 50%,
+    rgba(173, 8, 8, 0.35) 90%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.garagemind-timeline__step {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gm-space-sm);
+  min-width: 0;
+  padding: 0 0 0 calc(var(--gm-space-md) + var(--gm-space-xs));
+}
+
+.garagemind-timeline__step::before {
+  content: '';
+  position: absolute;
+  left: calc(0.4rem - 5px);
+  top: 0.35rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--gm-bg);
+  border: 2px solid var(--gm-accent);
+  box-sizing: border-box;
+}
+
+@media (min-width: 961px) {
+  .garagemind-how-it-works__inner {
+    text-align: center;
+  }
+
+  .garagemind-timeline {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--gm-gap-cards);
+    max-width: none;
+    margin: 0;
+    padding: var(--gm-space-md) 0 0;
+  }
+
+  .garagemind-timeline::before {
+    top: 0.65rem;
+    bottom: auto;
+    left: var(--gm-timeline-track-start);
+    right: auto;
+    width: calc(var(--gm-timeline-track-end) - var(--gm-timeline-track-start));
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(173, 8, 8, 0.35) 8%,
+      rgba(173, 8, 8, 0.4) 50%,
+      rgba(173, 8, 8, 0.35) 92%,
+      transparent 100%
+    );
+  }
+
+  .garagemind-timeline__step {
+    padding: var(--gm-space-md) 0 0;
+  }
+
+  .garagemind-timeline__step::before {
+    content: none;
+  }
+}
+
+@media (max-width: 960px) {
+  .garagemind-how-it-works__inner {
+    text-align: left;
+  }
+
+  .garagemind-how-it-works__heading {
+    font-size: clamp(1.5rem, 6.5vw, 2.25rem);
+    line-height: 1.15;
+    text-align: center;
+  }
+
+  .garagemind-how-it-works__subheading {
+    text-align: center;
+  }
+}
+
+.garagemind-timeline__number {
+  font-size: clamp(1.5rem, 1.2vw + 1rem, 2rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--gm-accent);
+}
+
+.garagemind-timeline__title {
+  margin: 0;
+  font-size: var(--gm-size-card-title);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.garagemind-timeline__body {
+  margin: 0;
+  font-size: var(--gm-size-body);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--gm-text-muted);
+}
+
+.garagemind-footer {
+  background: var(--gm-bg);
+  border-top: 1px solid var(--gm-border);
+}
+
+.garagemind-footer__text {
+  margin: 0;
+  font-size: var(--gm-size-body);
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: center;
   color: var(--gm-text-muted);
 }
 
