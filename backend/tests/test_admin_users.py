@@ -1,17 +1,12 @@
-from collections.abc import Iterator
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import SESSION_COOKIE
-from app.core.database import get_db
-from app.main import app
 from app.models import ADMIN_LOGIN, Role, User, UserSession
 from app.services.sessions import create_session
-from scripts.seed import seed
-from tests.test_auth import ADMIN_PASSWORD, LOGIN_FAILED, PASSWORD
+from tests.conftest import LOGIN_FAILED, PASSWORD
 from tests.test_one_time_passwords import ONE_TIME_PASSWORD_PATTERN
 
 pytestmark = pytest.mark.db
@@ -26,15 +21,6 @@ USER_ENDPOINTS = [
     ("DELETE", "/api/admin/users/{id}", None),
     ("POST", "/api/admin/users/{id}/reset-password", None),
 ]
-
-
-@pytest.fixture
-def client(db_session: Session) -> Iterator[TestClient]:
-    seed(db_session, ADMIN_PASSWORD, PASSWORD)
-    app.dependency_overrides[get_db] = lambda: db_session
-    with TestClient(app) as test_client:
-        yield test_client
-    app.dependency_overrides.clear()
 
 
 def _role(db_session: Session, name: str) -> Role:

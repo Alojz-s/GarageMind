@@ -1,29 +1,15 @@
-from collections.abc import Iterator
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import SESSION_COOKIE
-from app.core.database import get_db
-from app.main import app
 from app.models import Band, Role, User
 from app.services.sessions import create_session
-from scripts.seed import seed
 
 pytestmark = pytest.mark.db
 
 BAND_PAYLOAD = {"name": "New band", "bio": "Band bio text"}
-
-
-@pytest.fixture
-def client(db_session: Session) -> Iterator[TestClient]:
-    seed(db_session, "haslo-startowe-admina-testy", "haslo-uzytkownikow-testowych")
-    app.dependency_overrides[get_db] = lambda: db_session
-    with TestClient(app) as test_client:
-        yield test_client
-    app.dependency_overrides.clear()
 
 
 @pytest.mark.parametrize(

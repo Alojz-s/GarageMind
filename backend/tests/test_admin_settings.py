@@ -1,4 +1,3 @@
-from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -6,13 +5,10 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.api.deps import SESSION_COOKIE, get_security_settings
-from app.core.database import get_db
-from app.main import app
 from app.services.password_policy import validate_password
 from app.services.sessions import create_session, find_session
-from scripts.seed import seed
+from tests.conftest import PASSWORD
 from tests.test_admin_users import _sign_in_as, _user
-from tests.test_auth import ADMIN_PASSWORD, PASSWORD
 
 pytestmark = pytest.mark.db
 
@@ -22,15 +18,6 @@ DEFAULTS = {
     "password_validity_days": 0,
     "idle_timeout_minutes": 15,
 }
-
-
-@pytest.fixture
-def client(db_session: Session) -> Iterator[TestClient]:
-    seed(db_session, ADMIN_PASSWORD, PASSWORD)
-    app.dependency_overrides[get_db] = lambda: db_session
-    with TestClient(app) as test_client:
-        yield test_client
-    app.dependency_overrides.clear()
 
 
 @pytest.fixture

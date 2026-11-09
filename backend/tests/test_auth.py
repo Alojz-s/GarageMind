@@ -1,4 +1,3 @@
-from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -7,26 +6,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import SESSION_COOKIE
-from app.core.database import get_db
-from app.main import app
 from app.models import SECURITY_SETTINGS_ID, PasswordHistory, SecuritySettings, User, UserSession
-from scripts.seed import seed
+from tests.conftest import ADMIN_PASSWORD, LOGIN_FAILED, NEW_PASSWORD, PASSWORD
 
 pytestmark = pytest.mark.db
-
-PASSWORD = "haslo-uzytkownikow-testowych"
-ADMIN_PASSWORD = "haslo-startowe-admina-testy"
-NEW_PASSWORD = "zupelnie-nowe-haslo-po-zmianie"
-LOGIN_FAILED = {"detail": "Incorrect username or password"}
-
-
-@pytest.fixture
-def client(db_session: Session) -> Iterator[TestClient]:
-    seed(db_session, ADMIN_PASSWORD, PASSWORD)
-    app.dependency_overrides[get_db] = lambda: db_session
-    with TestClient(app) as test_client:
-        yield test_client
-    app.dependency_overrides.clear()
 
 
 def _login(client: TestClient, login: str = "redaktor", password: str = PASSWORD) -> str:
