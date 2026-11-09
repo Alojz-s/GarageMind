@@ -48,6 +48,6 @@ export async function apiRequest<T>(
   } | null
   if (response.status === 401) onUnauthorized(error?.code)
   const message =
-    typeof error?.detail === 'string' ? error.detail : `Błąd serwera (HTTP ${response.status})`
+    typeof error?.detail === 'string' ? error.detail : `Server error (HTTP ${response.status})`
   throw new ApiError(response.status, message, error?.code, error?.violations)
 }
