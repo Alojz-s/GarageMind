@@ -22,7 +22,7 @@
   font-display: swap;
 }
 
-/* Design tokens — wspólne dla landingu, logowania i aplikacji */
+/* Zmienne projektowe */
 :root {
   --gm-bg: #101010;
   --gm-text: #e1e1e1;
@@ -48,7 +48,7 @@
   --gm-size-card-title: clamp(1.0625rem, 0.35vw + 0.95rem, 1.375rem);
   --gm-size-body: clamp(0.9375rem, 0.2vw + 0.875rem, 1.125rem);
 
-  /* Rytm pionowy (skala 8px) */
+  /* Odstępy pionowe */
   --gm-space-xs: 0.5rem;
   --gm-space-sm: 1rem;
   --gm-space-md: 1.5rem;
@@ -79,7 +79,7 @@ textarea {
   font: inherit;
 }
 
-/* Przyciski — jeden system w całej aplikacji (landing, logowanie, panel) */
+/* Przyciski */
 .gm-btn {
   display: inline-flex;
   align-items: center;

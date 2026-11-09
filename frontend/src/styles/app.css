@@ -1,4 +1,4 @@
-/* Aplikacja po zalogowaniu: shell, menu boczne i komponenty treści */
+/* Aplikacja po zalogowaniu */
 
 .app-loading {
   display: flex;
@@ -44,7 +44,7 @@
   padding-bottom: var(--gm-space-xl);
 }
 
-/* —— Górny pasek: GM + menu w jednym rzędzie (flex, wyśrodkowane w pionie) —— */
+/* Górny pasek */
 .app__topbar {
   padding-top: clamp(1.75rem, 3.5vw, 3.125rem);
 }
@@ -100,7 +100,7 @@
   font-size: 0.85em;
 }
 
-/* —— Hamburger obok GM; środkowa kreska dłuższa, na hover odwrotnie —— */
+/* Przycisk menu */
 .app__menu-btn {
   display: flex;
   flex-direction: column;
@@ -143,7 +143,7 @@
   width: 0.95rem;
 }
 
-/* —— Menu boczne —— */
+/* Menu boczne */
 .app__backdrop {
   position: fixed;
   z-index: 40;
@@ -233,7 +233,7 @@
   outline: none;
 }
 
-/* —— Treść: pełna szerokość kontenera (jak landing) —— */
+/* Treść */
 .app__content {
   flex: 1;
   width: 100%;
@@ -283,14 +283,14 @@
   margin-inline: auto;
 }
 
-/* Pojedyncze wąskie formularze / karty komunikatów */
+/* Wąskie formularze */
 .app-stack--narrow {
   width: 100%;
   max-width: 36rem;
   margin-inline: auto;
 }
 
-/* Admin: tabela + panel boczny */
+/* Panel administratora */
 .app-split {
   display: grid;
   gap: var(--gm-space-lg);
@@ -347,7 +347,7 @@
   color: var(--gm-accent);
 }
 
-/* —— Lista zespołów (jak landing: 3 kolumny na desktopie) —— */
+/* Lista zespołów */
 .app-bands {
   display: grid;
   grid-template-columns: 1fr;
@@ -392,7 +392,7 @@
   text-align: center;
 }
 
-/* —— Formularze —— */
+/* Formularze */
 .app-form {
   display: flex;
   flex-direction: column;
@@ -476,7 +476,7 @@ select.app-input option {
   align-self: flex-start;
 }
 
-/* —— Komunikaty —— */
+/* Komunikaty */
 .app-alert {
   margin: 0;
   padding: 0.7rem 0.9rem;
@@ -504,7 +504,7 @@ select.app-input option {
   color: var(--gm-error-text);
 }
 
-/* —— Tabela użytkowników —— */
+/* Tabela użytkowników */
 .app-table-wrap {
   overflow-x: auto;
 }
@@ -557,7 +557,7 @@ select.app-input option {
   }
 }
 
-/* —— Panel użytkowników: pasek nad tabelą —— */
+/* Pasek nad tabelą */
 .app-users-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -571,7 +571,7 @@ select.app-input option {
   margin: 0;
 }
 
-/* —— Menu wiersza (trzy kropki) —— */
+/* Menu wiersza */
 .app-row-menu {
   position: relative;
   display: inline-flex;
@@ -666,7 +666,7 @@ select.app-input option {
   cursor: default;
 }
 
-/* —— Modal (nowy użytkownik) —— */
+/* Okno modalne */
 .app-modal-overlay {
   position: fixed;
   z-index: 50;
@@ -700,7 +700,7 @@ select.app-input option {
   margin-top: var(--gm-space-xs);
 }
 
-/* —— Statusy —— */
+/* Statusy */
 .app-badge {
   display: inline-block;
   padding: 0.15rem 0.7rem;
@@ -762,7 +762,7 @@ select.app-input option {
   padding-top: 0;
 }
 
-/* —— Hasło jednorazowe —— */
+/* Hasło jednorazowe */
 .app-otp {
   display: flex;
   flex-direction: column;

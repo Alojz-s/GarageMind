@@ -1,5 +1,5 @@
 .garagemind-landing {
-  /* Wysokość hero — na desktopie dominuje pierwszy ekran */
+  /* Wysokość sekcji głównej */
   --gm-hero-min: clamp(22rem, 50vh, 32rem);
 
   margin: 0;
@@ -19,7 +19,7 @@
   color: #fff;
 }
 
-/* Wspólna siatka: ta sama szerokość i marginesy boczne w całym landingu */
+/* Siatka strony */
 .garagemind-container {
   position: relative;
   z-index: 1;
@@ -29,7 +29,7 @@
   padding-inline: var(--gm-pad);
 }
 
-/* Bardzo szerokie monitory — delikatny limit, żeby karty nie były gigantyczne */
+/* Bardzo szerokie ekrany */
 @media (min-width: 120rem) {
   .garagemind-container {
     max-width: 120rem;
@@ -37,7 +37,7 @@
   }
 }
 
-/* Tło na pełną szerokość viewportu — treść trzyma się kontenera powyżej */
+/* Tło na pełną szerokość */
 .garagemind-section-bg {
   position: absolute;
   z-index: 0;
@@ -143,7 +143,7 @@
   color: #fff;
 }
 
-/* JOIN NOW — bazowy wygląd w .gm-btn (index.css), tu tylko skala hero */
+/* Przycisk w sekcji głównej */
 .garagemind-cta {
   padding: 0.875rem 2.6875rem;
   font-size: var(--gm-size-cta);
@@ -261,7 +261,7 @@
   color: var(--gm-text-muted);
 }
 
-/* —— Strona logowania (styl featured / ciemny panel) —— */
+/* Strona logowania */
 .garagemind-login {
   position: relative;
   min-height: 100vh;
