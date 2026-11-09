@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { fetchSecuritySettings, updateSecuritySettings, type SecuritySettings } from '../api/admin'
 import { ApiError, type Violation } from '../api/client'
+import { formatApiError, formatViolation } from '../messages/apiErrors'
 import { useAuth } from '../auth/AuthContext'
 import Alert from '../components/Alert'
 import PageHeader from '../components/PageHeader'
@@ -40,7 +41,7 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     fetchSecuritySettings()
       .then((settings) => setForm(toForm(settings)))
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
+      .catch((err: unknown) => setError(formatApiError(err)))
   }, [])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -62,7 +63,7 @@ export default function AdminSettingsPage() {
       // Licznik bezczynności bierze limit z /auth/me – odświeżamy go dla bieżącej sesji.
       await refreshUser()
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(formatApiError(err))
       setViolations(err instanceof ApiError ? err.violations : [])
     } finally {
       setSubmitting(false)
@@ -105,7 +106,7 @@ export default function AdminSettingsPage() {
         {violations.length > 0 && (
           <ul className="app-hints app-hints--error">
             {violations.map((violation, index) => (
-              <li key={`${violation.code}-${index}`}>{violation.message}</li>
+              <li key={`${violation.code}-${index}`}>{formatViolation(violation)}</li>
             ))}
           </ul>
         )}
