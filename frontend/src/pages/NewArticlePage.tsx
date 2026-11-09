@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { createArticle } from '../api/articles'
+import Alert from '../components/Alert'
+import PageHeader from '../components/PageHeader'
 
 export default function NewArticlePage() {
   const navigate = useNavigate()
@@ -24,36 +26,36 @@ export default function NewArticlePage() {
   }
 
   return (
-    <form className="card login-form" onSubmit={handleSubmit}>
-      <h2>Nowy artykuł</h2>
-      <label>
-        Tytuł
-        <input
-          name="title"
-          maxLength={200}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-      </label>
-      <label>
-        Treść
-        <textarea
-          name="content"
-          rows={6}
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          required
-        />
-      </label>
-      {error && (
-        <p className="error-message" role="alert">
-          {error}
-        </p>
-      )}
-      <button type="submit" disabled={submitting}>
-        Opublikuj
-      </button>
-    </form>
+    <>
+      <PageHeader title="Add band" subtitle="Publish a new band to the Bands page." />
+      <form className="app-card app-card--narrow app-form" onSubmit={handleSubmit}>
+        <label className="app-field">
+          Name
+          <input
+            className="app-input"
+            name="title"
+            maxLength={200}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+        </label>
+        <label className="app-field">
+          Description
+          <textarea
+            className="app-input"
+            name="content"
+            rows={6}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            required
+          />
+        </label>
+        {error && <Alert kind="error">{error}</Alert>}
+        <button type="submit" className="gm-btn" disabled={submitting}>
+          Publish
+        </button>
+      </form>
+    </>
   )
 }
