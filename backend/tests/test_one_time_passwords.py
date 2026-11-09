@@ -1,5 +1,4 @@
 import re
-from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -7,26 +6,14 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
-from app.main import app
 from app.models import OneTimePassword, User
 from app.services.one_time_passwords import (
     generate_plaintext,
     reset_account_with_one_time_password,
 )
-from scripts.seed import seed
-from tests.test_auth import ADMIN_PASSWORD, LOGIN_FAILED, NEW_PASSWORD, PASSWORD
+from tests.conftest import LOGIN_FAILED, NEW_PASSWORD, PASSWORD
 
 ONE_TIME_PASSWORD_PATTERN = re.compile(r"[A-HJ-NP-Za-hj-km-np-z2-9]{12}")
-
-
-@pytest.fixture
-def client(db_session: Session) -> Iterator[TestClient]:
-    seed(db_session, ADMIN_PASSWORD, PASSWORD)
-    app.dependency_overrides[get_db] = lambda: db_session
-    with TestClient(app) as test_client:
-        yield test_client
-    app.dependency_overrides.clear()
 
 
 def _reset_redaktor(db_session: Session) -> str:
@@ -81,7 +68,7 @@ def test_one_time_password_login_forces_password_change(
     assert _login(client, plain) == 200
 
     assert client.get("/api/auth/me").json()["must_change_password"] is True
-    response = client.get("/api/articles")
+    response = client.get("/api/bands")
     assert response.status_code == 403
     assert response.json()["code"] == "password_change_required"
     response = client.post(
@@ -93,7 +80,7 @@ def test_one_time_password_login_forces_password_change(
         },
     )
     assert response.status_code == 204
-    assert client.get("/api/articles").status_code == 200
+    assert client.get("/api/bands").status_code == 200
 
 
 @pytest.mark.db

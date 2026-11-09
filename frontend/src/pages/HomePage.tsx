@@ -1,68 +1,94 @@
-import { useEffect, useState } from 'react'
-import { fetchHealth, type HealthResponse } from '../api/health'
+import { Link } from 'react-router'
+import { useAuth } from '../auth/AuthContext'
+import { accountLinkPath, bandsLinkPath } from '../auth/paths'
+import Logo from '../components/Logo'
+import '../styles/garagemind.css'
 
-type State =
-  | { kind: 'loading' }
-  | { kind: 'loaded'; health: HealthResponse }
-  | { kind: 'unreachable'; message: string }
-
-function StatusBadge({ label, ok }: { label: string; ok: boolean | null }) {
-  const modifier = ok === null ? 'pending' : ok ? 'ok' : 'error'
-  const text = ok === null ? 'sprawdzanie…' : ok ? 'ok' : 'błąd'
-  return (
-    <li className="status-row">
-      <span className="status-label">{label}</span>
-      <span className={`status-badge status-badge--${modifier}`}>{text}</span>
-    </li>
-  )
-}
+const BANDS = [
+  {
+    name: 'Voidbringer',
+    description:
+      'Atmospheric black metal from the Pacific Northwest with crushing live sets and DIY merch.',
+  },
+  {
+    name: 'Ironclad',
+    description:
+      'Technical death metal with a raw, basement-show energy and a growing run of underground releases.',
+  },
+  {
+    name: 'Casketborn',
+    description:
+      'Heavy doom with crushing riffs and a live presence built for small rooms and loud crowds.',
+  },
+] as const
 
 export default function HomePage() {
-  const [state, setState] = useState<State>({ kind: 'loading' })
-  const [attempt, setAttempt] = useState(0)
-
-  useEffect(() => {
-    const controller = new AbortController()
-    fetchHealth(controller.signal)
-      .then((health) => setState({ kind: 'loaded', health }))
-      .catch((error: unknown) => {
-        if (controller.signal.aborted) return
-        setState({
-          kind: 'unreachable',
-          message: error instanceof Error ? error.message : String(error),
-        })
-      })
-    return () => controller.abort()
-  }, [attempt])
-
-  const refresh = () => {
-    setState({ kind: 'loading' })
-    setAttempt((n) => n + 1)
-  }
-
-  let backendOk: boolean | null = null
-  let databaseOk: boolean | null = null
-  if (state.kind === 'loaded') {
-    backendOk = state.health.status === 'ok'
-    databaseOk = state.health.database === 'ok'
-  } else if (state.kind === 'unreachable') {
-    backendOk = false
-    databaseOk = false
-  }
+  const { user } = useAuth()
+  const accountPath = accountLinkPath(user)
+  const bandsPath = bandsLinkPath(user)
 
   return (
-    <section className="card" aria-labelledby="status-heading">
-      <h2 id="status-heading">Status systemu</h2>
-      <ul className="status-list">
-        <StatusBadge label="Backend" ok={backendOk} />
-        <StatusBadge label="Baza danych" ok={databaseOk} />
-      </ul>
-      {state.kind === 'unreachable' && (
-        <p className="error-message">Brak połączenia z backendem ({state.message}).</p>
-      )}
-      <button type="button" onClick={refresh} disabled={state.kind === 'loading'}>
-        Odśwież
-      </button>
-    </section>
+    <div className="garagemind-landing">
+      <section className="garagemind-hero" aria-labelledby="hero-heading">
+        <div className="garagemind-section-bg garagemind-hero__bg" aria-hidden>
+          <img src="/garagemind/Sekcja1.png" alt="" />
+        </div>
+        <div className="garagemind-container garagemind-hero__shell">
+          <header className="garagemind-header">
+            <Logo variant="full" to="/" />
+            <nav aria-label="Main">
+              <ul className="garagemind-nav">
+                <li>
+                  <Link to={bandsPath}>BANDS</Link>
+                </li>
+                <li>
+                  <Link to={accountPath}>ACC</Link>
+                </li>
+              </ul>
+            </nav>
+          </header>
+          <div className="garagemind-hero__body">
+            <h1 id="hero-heading" className="garagemind-hero__title">
+              OUT OF THE GARAGE
+            </h1>
+            <Link to={accountPath} className="gm-btn garagemind-cta">
+              JOIN NOW
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="garagemind-featured" aria-labelledby="featured-heading">
+        <div className="garagemind-section-bg garagemind-featured__bg" aria-hidden>
+          <img src="/garagemind/Sekcja2.png" alt="" />
+        </div>
+        <div className="garagemind-container garagemind-featured__inner">
+          <h2 id="featured-heading" className="garagemind-featured__heading">
+            Featured{' '}
+            <span className="garagemind-featured__heading-accent">Bands</span>
+          </h2>
+          <p className="garagemind-featured__note">
+            A curated landing preview only. The full band directory lives in the app after you sign
+            in.
+          </p>
+          <ul className="garagemind-bands">
+            {BANDS.map((band) => (
+              <li key={band.name} className="garagemind-band-card">
+                <img
+                  className="garagemind-band-card__image"
+                  src="/garagemind/BandPlaceholder.png"
+                  alt=""
+                />
+                <h3 className="garagemind-band-card__name">{band.name}</h3>
+                <p className="garagemind-band-card__description">{band.description}</p>
+              </li>
+            ))}
+          </ul>
+          <Link to={bandsPath} className="gm-btn garagemind-featured__cta">
+            Browse bands
+          </Link>
+        </div>
+      </section>
+    </div>
   )
 }

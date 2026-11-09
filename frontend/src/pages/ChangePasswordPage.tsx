@@ -2,7 +2,10 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { changePassword, fetchPasswordPolicy } from '../api/auth'
 import { ApiError, type Violation } from '../api/client'
+import { formatApiError, formatViolation } from '../messages/apiErrors'
 import { useAuth } from '../auth/AuthContext'
+import Alert from '../components/Alert'
+import PageHeader from '../components/PageHeader'
 
 export default function ChangePasswordPage() {
   const { user, refreshUser } = useAuth()
@@ -30,9 +33,9 @@ export default function ChangePasswordPage() {
     try {
       await changePassword(oldPassword, newPassword, newPasswordConfirm)
       await refreshUser()
-      navigate('/', { replace: true })
+      navigate('/bands', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(formatApiError(err))
       setViolations(err instanceof ApiError ? err.violations : [])
     } finally {
       setSubmitting(false)
@@ -40,64 +43,67 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <form className="card login-form" onSubmit={handleSubmit}>
-      <h2>Zmiana hasła</h2>
-      {forced && <p className="notice">Przed dalszą pracą musisz ustawić nowe hasło.</p>}
-      {requirements.length > 0 && (
-        <ul className="hint-list">
-          {requirements.map((requirement) => (
-            <li key={requirement}>{requirement}</li>
-          ))}
-        </ul>
-      )}
-      <label>
-        Obecne hasło
-        <input
-          name="old_password"
-          type="password"
-          autoComplete="current-password"
-          value={oldPassword}
-          onChange={(e) => setOldPassword(e.target.value)}
-          required
-        />
-      </label>
-      <label>
-        Nowe hasło
-        <input
-          name="new_password"
-          type="password"
-          autoComplete="new-password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          required
-        />
-      </label>
-      {violations.length > 0 && (
-        <ul className="hint-list error-message">
-          {violations.map((violation) => (
-            <li key={violation.code}>{violation.message}</li>
-          ))}
-        </ul>
-      )}
-      <label>
-        Powtórz nowe hasło
-        <input
-          name="new_password_confirm"
-          type="password"
-          autoComplete="new-password"
-          value={newPasswordConfirm}
-          onChange={(e) => setNewPasswordConfirm(e.target.value)}
-          required
-        />
-      </label>
-      {error && (
-        <p className="error-message" role="alert">
-          {error}
-        </p>
-      )}
-      <button type="submit" disabled={submitting}>
-        Zmień hasło
-      </button>
-    </form>
+    <>
+      <PageHeader
+        title="Change password"
+        subtitle={forced ? 'You must set a new password before continuing.' : undefined}
+      />
+      <form className="app-card app-card--narrow app-form" onSubmit={handleSubmit}>
+        {requirements.length > 0 && (
+          <ul className="app-hints">
+            {requirements.map((requirement) => (
+              <li key={requirement}>{requirement}</li>
+            ))}
+          </ul>
+        )}
+        <label className="app-field">
+          Current password
+          <input
+            className="app-input"
+            name="old_password"
+            type="password"
+            autoComplete="current-password"
+            value={oldPassword}
+            onChange={(e) => setOldPassword(e.target.value)}
+            required
+          />
+        </label>
+        <label className="app-field">
+          New password
+          <input
+            className="app-input"
+            name="new_password"
+            type="password"
+            autoComplete="new-password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+          />
+        </label>
+        <label className="app-field">
+          Confirm new password
+          <input
+            className="app-input"
+            name="new_password_confirm"
+            type="password"
+            autoComplete="new-password"
+            value={newPasswordConfirm}
+            onChange={(e) => setNewPasswordConfirm(e.target.value)}
+            required
+          />
+        </label>
+        {violations.length > 0 && (
+          <ul className="app-hints app-hints--error">
+            {violations.map((violation) => (
+              <li key={violation.code}>{formatViolation(violation)}</li>
+            ))}
+          </ul>
+        )}
+        {error && <Alert kind="error">{error}</Alert>}
+        <button type="submit" className="gm-btn" disabled={submitting}>
+          Update password
+        </button>
+      </form>
+    </>
   )
 }

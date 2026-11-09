@@ -70,8 +70,8 @@ class SecuritySettingsUpdate(BaseModel):
             MIN_PASSWORD_LENGTH_FLOOR,
             MAX_PASSWORD_LENGTH,
             "invalid_min_password_length",
-            f"Minimalna długość hasła musi wynosić od {MIN_PASSWORD_LENGTH_FLOOR} "
-            f"do {MAX_PASSWORD_LENGTH} znaków.",
+            f"Minimum password length must be between {MIN_PASSWORD_LENGTH_FLOOR} "
+            f"and {MAX_PASSWORD_LENGTH} characters.",
         ),
     ]
     date_rule_enabled: bool
@@ -81,7 +81,7 @@ class SecuritySettingsUpdate(BaseModel):
             0,
             MAX_PASSWORD_VALIDITY_DAYS,
             "invalid_password_validity_days",
-            f"Ważność hasła musi wynosić od 0 do {MAX_PASSWORD_VALIDITY_DAYS} dni (0 = wyłączona).",
+            f"Password validity must be between 0 and {MAX_PASSWORD_VALIDITY_DAYS} days (0 = off).",
         ),
     ]
     idle_timeout_minutes: Annotated[
@@ -90,7 +90,7 @@ class SecuritySettingsUpdate(BaseModel):
             MIN_IDLE_TIMEOUT_MINUTES,
             MAX_IDLE_TIMEOUT_MINUTES,
             "invalid_idle_timeout",
-            f"Czas bezczynności musi być między {MIN_IDLE_TIMEOUT_MINUTES} "
-            f"a {MAX_IDLE_TIMEOUT_MINUTES} minutami.",
+            f"Idle timeout must be between {MIN_IDLE_TIMEOUT_MINUTES} "
+            f"and {MAX_IDLE_TIMEOUT_MINUTES} minutes.",
         ),
     ]

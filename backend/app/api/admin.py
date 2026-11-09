@@ -27,9 +27,9 @@ from app.services.sessions import delete_all_sessions_for_user
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
-ADMIN_MODIFY = "Nie można modyfikować konta ADMIN"
-ADMIN_BLOCK = "Nie można zablokować konta ADMIN"
-ADMIN_DELETE = "Nie można usunąć konta ADMIN"
+ADMIN_MODIFY = "The ADMIN account cannot be modified"
+ADMIN_BLOCK = "The ADMIN account cannot be blocked"
+ADMIN_DELETE = "The ADMIN account cannot be deleted"
 
 
 def _user_item(user: User) -> UserListItem:
@@ -45,7 +45,7 @@ def _user_item(user: User) -> UserListItem:
 def _get_role(db: Session, role_id: int) -> Role:
     role = db.get(Role, role_id)
     if role is None:
-        raise ApiError(status.HTTP_400_BAD_REQUEST, "Nieznana rola", "invalid_role")
+        raise ApiError(status.HTTP_400_BAD_REQUEST, "Unknown role", "invalid_role")
     return role
 
 
@@ -53,7 +53,7 @@ def _get_managed_user(db: Session, user_id: int, admin_message: str) -> User:
     """Zwraca nieusuniętego użytkownika innego niż ADMIN."""
     user = db.get(User, user_id)
     if user is None or user.deleted_at is not None:
-        raise ApiError(status.HTTP_404_NOT_FOUND, "Nie znaleziono użytkownika", "user_not_found")
+        raise ApiError(status.HTTP_404_NOT_FOUND, "User not found", "user_not_found")
     if user.login == ADMIN_LOGIN:
         raise ApiError(status.HTTP_409_CONFLICT, admin_message, "admin_account_protected")
     return user
@@ -79,7 +79,7 @@ def create_user(body: UserCreate, db: Annotated[Session, Depends(get_db)]) -> Cr
     role = _get_role(db, body.role_id)
     # Sprawdzenie obejmuje konta usunięte miękko - ich login pozostaje zajęty.
     if db.scalar(select(User.id).where(User.login == body.login)) is not None:
-        raise ApiError(status.HTTP_409_CONFLICT, "Login jest już zajęty", "login_taken")
+        raise ApiError(status.HTTP_409_CONFLICT, "Username is already taken", "login_taken")
     user = User(login=body.login, role=role, is_blocked=False, must_change_password=True)
     db.add(user)
     db.flush()

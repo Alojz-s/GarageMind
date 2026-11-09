@@ -219,7 +219,10 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# --- KeyGate ---
+# --- Local only (not published) ---
+/AsTemp/
+/docs/
+AGENTS.md
 # Python / venv
 .venv/
 # Sekrety (wzorzec .env.example pozostaje w repo)

@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 from alembic.config import Config
+from fastapi.testclient import TestClient
 from sqlalchemy import Engine, create_engine, make_url, text
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
@@ -13,6 +14,11 @@ from app.core.config import ROOT_DIR, get_settings
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 TEST_DATABASE_NAME = "keygate_test"
+
+ADMIN_PASSWORD = "haslo-startowe-admina-testy"
+PASSWORD = "haslo-uzytkownikow-testowych"
+NEW_PASSWORD = "zupelnie-nowe-haslo-po-zmianie"
+LOGIN_FAILED = {"detail": "Incorrect username or password"}
 
 if not (ROOT_DIR / ".env").exists():
     os.environ.setdefault(
@@ -77,3 +83,16 @@ def db_session(db_engine: Engine) -> Iterator[Session]:
         finally:
             session.close()
             transaction.rollback()
+
+
+@pytest.fixture
+def client(db_session: Session) -> Iterator[TestClient]:
+    from app.core.database import get_db
+    from app.main import app
+    from scripts.seed import seed
+
+    seed(db_session, ADMIN_PASSWORD, PASSWORD)
+    app.dependency_overrides[get_db] = lambda: db_session
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()

@@ -14,7 +14,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    app_name: str = "KeyGate"
+    app_name: str = "GarageMind"
     app_env: str = "development"
     debug: bool = False
     database_url: str

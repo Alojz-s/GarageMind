@@ -3,7 +3,7 @@ import { fetchMe, login as apiLogin, logout as apiLogout, type Me } from '../api
 import { setUnauthorizedHandler } from '../api/client'
 import { AuthContext } from './AuthContext'
 
-const IDLE_NOTICE = 'Wylogowano z powodu bezczynności'
+const IDLE_NOTICE = 'Signed out due to inactivity.'
 const ACTIVITY_EVENTS = ['mousemove', 'keydown', 'click'] as const
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
