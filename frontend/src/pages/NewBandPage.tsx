@@ -1,13 +1,14 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
-import { createArticle } from '../api/articles'
+import { createBand } from '../api/bands'
 import Alert from '../components/Alert'
 import PageHeader from '../components/PageHeader'
+import { formatApiError } from '../messages/apiErrors'
 
-export default function NewArticlePage() {
+export default function NewBandPage() {
   const navigate = useNavigate()
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
+  const [name, setName] = useState('')
+  const [bio, setBio] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -16,10 +17,10 @@ export default function NewArticlePage() {
     setError(null)
     setSubmitting(true)
     try {
-      await createArticle(title, content)
-      navigate('/articles')
+      await createBand(name, bio)
+      navigate('/bands')
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(formatApiError(err))
     } finally {
       setSubmitting(false)
     }
@@ -30,24 +31,24 @@ export default function NewArticlePage() {
       <PageHeader title="Add band" subtitle="Publish a new band to the Bands page." />
       <form className="app-card app-card--narrow app-form" onSubmit={handleSubmit}>
         <label className="app-field">
-          Name
+          Band name
           <input
             className="app-input"
-            name="title"
+            name="name"
             maxLength={200}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             required
           />
         </label>
         <label className="app-field">
-          Description
+          Bio
           <textarea
             className="app-input"
-            name="content"
+            name="bio"
             rows={6}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
             required
           />
         </label>
