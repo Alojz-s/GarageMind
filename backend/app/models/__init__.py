@@ -1,4 +1,4 @@
-from app.models.article import Article
+from app.models.band import Band
 from app.models.one_time_password import OneTimePassword
 from app.models.password_history import PasswordHistory
 from app.models.role import Permission, Role, role_permissions
@@ -9,7 +9,7 @@ from app.models.user_session import UserSession
 __all__ = [
     "ADMIN_LOGIN",
     "SECURITY_SETTINGS_ID",
-    "Article",
+    "Band",
     "OneTimePassword",
     "PasswordHistory",
     "Permission",
