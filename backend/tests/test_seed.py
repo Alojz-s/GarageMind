@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import Base
 from app.core.permissions import ROLE_PERMISSION_MATRIX
-from app.models import Article, Permission, Role, SecuritySettings, User
+from app.models import Band, Permission, Role, SecuritySettings, User
 from app.services.passwords import verify_password
 from scripts.seed import ADMIN_LOGIN, seed
 
@@ -26,14 +26,14 @@ def _user(db: Session, login: str) -> User:
 
 
 def test_seed_is_idempotent(db_session: Session) -> None:
-    models = [User, Role, Permission, Article, SecuritySettings]
+    models = [User, Role, Permission, Band, SecuritySettings]
 
     seed(db_session, ADMIN_PASSWORD, USER_PASSWORD)
     counts = {model: _count(db_session, model) for model in models}
     seed(db_session, ADMIN_PASSWORD, USER_PASSWORD)
 
     assert {model: _count(db_session, model) for model in models} == counts
-    assert counts == {User: 3, Role: 4, Permission: 4, Article: 3, SecuritySettings: 1}
+    assert counts == {User: 3, Role: 4, Permission: 4, Band: 3, SecuritySettings: 1}
 
 
 def test_seed_assigns_permissions_from_matrix(db_session: Session) -> None:

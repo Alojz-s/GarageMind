@@ -81,7 +81,7 @@ def test_one_time_password_login_forces_password_change(
     assert _login(client, plain) == 200
 
     assert client.get("/api/auth/me").json()["must_change_password"] is True
-    response = client.get("/api/articles")
+    response = client.get("/api/bands")
     assert response.status_code == 403
     assert response.json()["code"] == "password_change_required"
     response = client.post(
@@ -93,7 +93,7 @@ def test_one_time_password_login_forces_password_change(
         },
     )
     assert response.status_code == 204
-    assert client.get("/api/articles").status_code == 200
+    assert client.get("/api/bands").status_code == 200
 
 
 @pytest.mark.db
