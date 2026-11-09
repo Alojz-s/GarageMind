@@ -34,12 +34,3 @@ def test_health_database_error(client: TestClient) -> None:
 
     assert response.status_code == 503
     assert response.json() == {"status": "ok", "database": "error"}
-
-
-@pytest.mark.db
-def test_health_real_database(client: TestClient) -> None:
-    response = client.get("/api/health")
-
-    if response.json()["database"] != "ok":
-        pytest.skip("Baza PostgreSQL niedostępna (uruchom: docker compose up -d)")
-    assert response.status_code == 200

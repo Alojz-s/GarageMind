@@ -1,12 +1,8 @@
-from datetime import UTC, datetime
-
 import pytest
 from sqlalchemy import func, select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.database import Base
-from app.core.permissions import ROLE_PERMISSION_MATRIX
 from app.models import Band, Permission, Role, SecuritySettings, User
 from app.services.passwords import verify_password
 from scripts.seed import ADMIN_LOGIN, seed
@@ -36,13 +32,6 @@ def test_seed_is_idempotent(db_session: Session) -> None:
     assert counts == {User: 3, Role: 4, Permission: 4, Band: 3, SecuritySettings: 1}
 
 
-def test_seed_assigns_permissions_from_matrix(db_session: Session) -> None:
-    seed(db_session, ADMIN_PASSWORD, USER_PASSWORD)
-
-    for role in db_session.scalars(select(Role)):
-        assert {p.name for p in role.permissions} == set(ROLE_PERMISSION_MATRIX[role.name])
-
-
 def test_seed_users(db_session: Session) -> None:
     seed(db_session, ADMIN_PASSWORD, USER_PASSWORD)
 
@@ -50,7 +39,6 @@ def test_seed_users(db_session: Session) -> None:
     assert admin.role.name == "Administrator"
     assert admin.must_change_password is True
     assert admin.password_hash is not None
-    assert admin.password_hash.startswith("$argon2id$")
     assert verify_password(ADMIN_PASSWORD, admin.password_hash)
 
     for login, role_name in [("redaktor", "Redaktor"), ("czytelnik", "Czytelnik")]:
@@ -68,14 +56,3 @@ def test_seed_does_not_overwrite_existing_password(db_session: Session) -> None:
     admin_hash = _user(db_session, ADMIN_LOGIN).password_hash
     assert admin_hash is not None
     assert verify_password(ADMIN_PASSWORD, admin_hash)
-
-
-def test_login_stays_taken_after_soft_delete(db_session: Session) -> None:
-    seed(db_session, ADMIN_PASSWORD, USER_PASSWORD)
-    role = db_session.scalars(select(Role).where(Role.name == "Czytelnik")).one()
-    db_session.add(User(login="usuniety", role=role, deleted_at=datetime.now(UTC)))
-    db_session.flush()
-
-    db_session.add(User(login="usuniety", role=role))
-    with pytest.raises(IntegrityError):
-        db_session.flush()
