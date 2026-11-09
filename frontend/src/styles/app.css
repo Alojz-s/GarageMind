@@ -1,5 +1,29 @@
 /* Aplikacja po zalogowaniu: shell, menu boczne i komponenty treści */
 
+.app-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.app-loading--landing {
+  background: #0a0a0a;
+}
+
+.app-loading__text {
+  margin: 0;
+  font-size: var(--gm-size-body);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gm-text-muted);
+}
+
+.app-loading--landing .app-loading__text {
+  color: #888;
+}
+
 .app {
   position: relative;
   min-height: 100vh;

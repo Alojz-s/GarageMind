@@ -171,6 +171,30 @@
   color: var(--gm-accent);
 }
 
+.garagemind-featured__note {
+  margin: calc(-1 * var(--gm-space-md)) 0 var(--gm-space-lg);
+  max-width: 36rem;
+  margin-inline: auto;
+  font-size: var(--gm-size-body);
+  line-height: 1.5;
+  text-align: center;
+  color: var(--gm-text-muted);
+}
+
+.garagemind-featured__cta {
+  display: block;
+  width: fit-content;
+  margin: var(--gm-space-xl) auto 0;
+}
+
+.garagemind-public-404__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gm-space-sm);
+  justify-content: center;
+  margin-top: var(--gm-space-lg);
+}
+
 .garagemind-bands {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
