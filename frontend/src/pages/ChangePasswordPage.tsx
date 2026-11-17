@@ -6,6 +6,8 @@ import { formatApiError, formatViolation } from '../messages/apiErrors'
 import { useAuth } from '../auth/AuthContext'
 import Alert from '../components/Alert'
 import PageHeader from '../components/PageHeader'
+import TurnstileWidget from '../components/TurnstileWidget'
+import { useCaptchaConfig } from '../auth/useCaptchaConfig'
 
 export default function ChangePasswordPage() {
   const { user, refreshUser } = useAuth()
@@ -17,6 +19,9 @@ export default function ChangePasswordPage() {
   const [error, setError] = useState<string | null>(null)
   const [violations, setViolations] = useState<Violation[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const captcha = useCaptchaConfig()
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaReset, setCaptchaReset] = useState(0)
   const forced = user?.must_change_password ?? false
 
   useEffect(() => {
@@ -31,12 +36,13 @@ export default function ChangePasswordPage() {
     setViolations([])
     setSubmitting(true)
     try {
-      await changePassword(oldPassword, newPassword, newPasswordConfirm)
+      await changePassword(oldPassword, newPassword, newPasswordConfirm, captchaToken)
       await refreshUser()
       navigate('/bands', { replace: true })
     } catch (err) {
       setError(formatApiError(err))
       setViolations(err instanceof ApiError ? err.violations : [])
+      setCaptchaReset((n) => n + 1)
     } finally {
       setSubmitting(false)
     }
@@ -92,6 +98,13 @@ export default function ChangePasswordPage() {
             required
           />
         </label>
+        {captcha?.enabled && captcha.site_key && (
+          <TurnstileWidget
+            siteKey={captcha.site_key}
+            onToken={setCaptchaToken}
+            resetKey={captchaReset}
+          />
+        )}
         {violations.length > 0 && (
           <ul className="app-hints app-hints--error">
             {violations.map((violation) => (
@@ -100,7 +113,9 @@ export default function ChangePasswordPage() {
           </ul>
         )}
         {error && <Alert kind="error">{error}</Alert>}
-        <button type="submit" className="gm-btn" disabled={submitting}>
+        <button type="submit" className="gm-btn"
+          disabled={submitting || (captcha?.enabled === true && !captchaToken)}
+        >
           Update password
         </button>
       </form>
