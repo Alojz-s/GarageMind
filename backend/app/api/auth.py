@@ -26,6 +26,12 @@ from app.schemas.auth import (
     PasswordPolicyResponse,
     PolicyViolation,
 )
+from app.services.canary_trap import (
+    CanaryTrigger,
+    fire_trap,
+    is_trap_login,
+    trigger_canary_in_background,
+)
 from app.services.login_lockout import locked_seconds, register_failed_login, reset_lockout
 from app.services.one_time_passwords import (
     try_login_with_one_time_password,
@@ -84,8 +90,19 @@ def _check_ip_limit(request: Request, db: Session) -> None:
     """M2-D: per-IP failed login limit (429 too_many_attempts). No-op for now."""
 
 
-def _check_canary_trap(body: LoginRequest) -> None:
-    """M2-C: trap account (CANARY_TRAP_LOGIN) fires the token and ends in 401. No-op for now."""
+def get_canary_trigger() -> CanaryTrigger:
+    """Dependency overridden in tests (no network)."""
+    return trigger_canary_in_background
+
+
+def _check_canary_trap(body: LoginRequest, settings: Settings, trigger: CanaryTrigger) -> None:
+    """Trap account (CANARY_TRAP_LOGIN): fires the Canarytoken and ends in the usual 401.
+
+    Exits before the user lookup, so no failed-login counter is touched.
+    """
+    if is_trap_login(settings, body.login):
+        fire_trap(settings, trigger)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, LOGIN_FAILED)
 
 
 def _check_account_lock(user: User | None) -> None:
@@ -117,11 +134,12 @@ def login(
     db: Annotated[Session, Depends(get_db)],
     settings: Annotated[Settings, Depends(get_settings)],
     verifier: Annotated[TurnstileVerifier, Depends(get_turnstile_verifier)],
+    canary_trigger: Annotated[CanaryTrigger, Depends(get_canary_trigger)],
 ) -> MeResponse:
     _check_honeypot(body)  # 1
     _check_ip_limit(request, db)  # 2 (M2-D)
     _require_captcha(settings, verifier, body.captcha_token, request)  # 3
-    _check_canary_trap(body)  # 4 (M2-C)
+    _check_canary_trap(body, settings, canary_trigger)  # 4 (M2-C)
 
     user = db.scalar(select(User).where(User.login == body.login))
     if user is not None and (user.is_blocked or user.deleted_at is not None):
