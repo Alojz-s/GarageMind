@@ -17,6 +17,7 @@ DEFAULTS = {
     "date_rule_enabled": False,
     "password_validity_days": 0,
     "idle_timeout_minutes": 15,
+    "max_failed_logins": 5,
 }
 
 
@@ -78,6 +79,13 @@ def test_date_rule_toggle(
     assert {v.code for v in violations} == expected
 
 
+def test_max_failed_logins_is_persisted(admin_client: TestClient, db_session: Session) -> None:
+    assert admin_client.get("/api/admin/settings").json()["max_failed_logins"] == 5
+
+    assert _put(admin_client, max_failed_logins=3)["max_failed_logins"] == 3
+    assert get_security_settings(db_session).max_failed_logins == 3
+
+
 def test_lowered_idle_timeout_expires_open_session(
     admin_client: TestClient, db_session: Session
 ) -> None:
@@ -102,6 +110,8 @@ def test_lowered_idle_timeout_expires_open_session(
         ("password_validity_days", -1, "invalid_password_validity_days"),
         ("idle_timeout_minutes", 0, "invalid_idle_timeout"),
         ("idle_timeout_minutes", 121, "invalid_idle_timeout"),
+        ("max_failed_logins", 0, "invalid_max_failed_logins"),
+        ("max_failed_logins", 21, "invalid_max_failed_logins"),
     ],
 )
 def test_invalid_settings_are_rejected(
