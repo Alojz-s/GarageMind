@@ -24,6 +24,7 @@ from app.schemas.auth import (
     PasswordPolicyResponse,
     PolicyViolation,
 )
+from app.services.login_lockout import locked_seconds, register_failed_login, reset_lockout
 from app.services.one_time_passwords import (
     try_login_with_one_time_password,
     verify_used_one_time_password,
@@ -56,12 +57,25 @@ def login(
     user = db.scalar(select(User).where(User.login == body.login))
     if user is not None and (user.is_blocked or user.deleted_at is not None):
         user = None
+    if user is not None:
+        remaining = locked_seconds(user)
+        if remaining > 0:
+            raise ApiError(
+                status.HTTP_423_LOCKED,
+                "Account temporarily locked due to too many failed login attempts",
+                "account_locked",
+                locked_seconds=remaining,
+            )
     password_hash = user.password_hash if user and user.password_hash else DUMMY_PASSWORD_HASH
     password_ok = verify_password(body.password, password_hash)
     otp_ok = not password_ok and try_login_with_one_time_password(db, user, body.password)
     if user is None or not (password_ok or otp_ok):
+        if user is not None:
+            register_failed_login(user, get_security_settings(db).max_failed_logins)
+            db.commit()
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, LOGIN_FAILED)
 
+    reset_lockout(user)
     if password_change_required(user, get_security_settings(db)):
         user.must_change_password = True
     token = create_session(db, user.id)
