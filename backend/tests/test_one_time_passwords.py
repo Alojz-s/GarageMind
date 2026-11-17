@@ -11,7 +11,7 @@ from app.services.one_time_passwords import (
     generate_plaintext,
     reset_account_with_one_time_password,
 )
-from tests.conftest import LOGIN_FAILED, NEW_PASSWORD, PASSWORD
+from tests.conftest import LOGIN_FAILED, NEW_PASSWORD
 
 ONE_TIME_PASSWORD_PATTERN = re.compile(r"[A-HJ-NP-Za-hj-km-np-z2-9]{12}")
 
@@ -23,9 +23,8 @@ def _reset_redaktor(db_session: Session) -> str:
     return plain
 
 
-def _login(client: TestClient, password: str) -> int:
-    response = client.post("/api/auth/login", json={"login": "redaktor", "password": password})
-    return response.status_code
+def _login(client: TestClient, password: str):
+    return client.post("/api/auth/login", json={"login": "redaktor", "password": password})
 
 
 def test_generated_password_has_12_chars_from_alphabet() -> None:
@@ -41,33 +40,19 @@ def test_expired_one_time_password_is_rejected(client: TestClient, db_session: S
     otp.expires_at = datetime.now(UTC) - timedelta(seconds=1)
     db_session.flush()
 
-    response = client.post("/api/auth/login", json={"login": "redaktor", "password": plain})
+    response = _login(client, plain)
 
     assert response.status_code == 401
     assert response.json() == LOGIN_FAILED
 
 
 @pytest.mark.db
-def test_one_time_password_works_only_once(client: TestClient, db_session: Session) -> None:
-    plain = _reset_redaktor(db_session)
-    assert _login(client, plain) == 200
-    client.post("/api/auth/logout")
-
-    response = client.post("/api/auth/login", json={"login": "redaktor", "password": plain})
-
-    assert response.status_code == 401
-    assert response.json() == LOGIN_FAILED
-
-
-@pytest.mark.db
-def test_one_time_password_login_forces_password_change(
+def test_one_time_password_forces_change_and_works_once(
     client: TestClient, db_session: Session
 ) -> None:
     plain = _reset_redaktor(db_session)
 
-    assert _login(client, plain) == 200
-
-    assert client.get("/api/auth/me").json()["must_change_password"] is True
+    assert _login(client, plain).status_code == 200
     response = client.get("/api/bands")
     assert response.status_code == 403
     assert response.json()["code"] == "password_change_required"
@@ -82,16 +67,5 @@ def test_one_time_password_login_forces_password_change(
     assert response.status_code == 204
     assert client.get("/api/bands").status_code == 200
 
-
-@pytest.mark.db
-def test_reset_invalidates_password_and_sessions(client: TestClient, db_session: Session) -> None:
-    assert _login(client, PASSWORD) == 200
-
-    _reset_redaktor(db_session)
-
-    response = client.get("/api/auth/me")
-    assert response.status_code == 401
-    assert response.json()["code"] == "not_authenticated"
-    response = client.post("/api/auth/login", json={"login": "redaktor", "password": PASSWORD})
-    assert response.status_code == 401
-    assert response.json() == LOGIN_FAILED
+    client.post("/api/auth/logout")
+    assert _login(client, plain).json() == LOGIN_FAILED

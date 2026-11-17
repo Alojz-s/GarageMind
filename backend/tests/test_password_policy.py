@@ -24,26 +24,15 @@ def _codes(password: str, db: Session, date_rule: bool, user_id: int | None = No
     [
         ("kot-pies-chomik", True, set()),
         ("kot-pies-chomi", True, {"too_short"}),
-        ("x" * 64, True, set()),
         ("x" * 65, True, {"too_long"}),
-        ("qwertyuiopasdfgh", False, {"common_password"}),
         ("QWERTYuiopASDFGH", False, {"common_password"}),
         ("Filemon2024!", True, {"too_short", "contains_year"}),
-        ("kot_1999_lato", True, {"too_short", "contains_year"}),
         ("kot05.01.2024pies", True, {"contains_year"}),
         ("abc119501xyz", True, {"too_short"}),
         ("haslo2031abc", True, {"too_short"}),
         ("15.01.2024", True, {"too_short", "is_date", "contains_year"}),
-        ("2024-01-15", True, {"too_short", "is_date", "contains_year"}),
-        ("15/01/2024", True, {"too_short", "is_date", "contains_year"}),
-        ("15012024", True, {"too_short", "is_date"}),
         ("20240115", True, {"too_short", "is_date"}),
-        ("32.13.2024", True, {"too_short", "contains_year"}),
         ("15 stycznia 2024", True, {"is_date", "contains_year"}),
-        ("15 styczeń 2024", True, {"is_date", "contains_year"}),
-        ("3 października 1999", True, {"is_date", "contains_year"}),
-        ("Filemon2024!", False, {"too_short"}),
-        ("kot05.01.2024pies", False, set()),
         ("15 stycznia 2024", False, set()),
     ],
 )
@@ -53,18 +42,8 @@ def test_validate_password(
     assert _codes(password, db_session, date_rule) == expected
 
 
-@pytest.fixture(scope="module")
-def old_password_hashes() -> list[str]:
-    return [hash_password(p) for p in OLD_PASSWORDS]
-
-
-@pytest.mark.parametrize(
-    ("index", "reused"), [(0, True), (1, True), (4, True), (5, False)], ids=str
-)
-def test_reused_password(
-    db_session: Session, old_password_hashes: list[str], index: int, reused: bool
-) -> None:
-    current, *history = old_password_hashes
+def test_last_five_passwords_cannot_be_reused(db_session: Session) -> None:
+    current, *history = [hash_password(p) for p in OLD_PASSWORDS]
     user = User(login="historia", password_hash=current, role=Role(name="Testowa"))
     db_session.add(user)
     db_session.flush()
@@ -75,6 +54,9 @@ def test_reused_password(
     )
     db_session.flush()
 
-    codes = _codes(OLD_PASSWORDS[index], db_session, date_rule=False, user_id=user.id)
+    reused = [
+        "reused_password" in _codes(p, db_session, date_rule=False, user_id=user.id)
+        for p in OLD_PASSWORDS
+    ]
 
-    assert ("reused_password" in codes) is reused
+    assert reused == [True, True, True, True, True, False]

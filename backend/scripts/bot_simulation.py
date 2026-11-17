@@ -1,28 +1,19 @@
-"""Bot simulation against your OWN local GarageMind instance (HTTP only, no TestClient).
+"""Symulacja bota przeciw własnej, lokalnej instancji GarageMind (przez HTTP).
 
-Runs automated-attack scenarios against POST /api/auth/login and prints a table showing
-which protections worked.
+Wysyła zautomatyzowane próby na POST /api/auth/login i wypisuje tabelę z zabezpieczeniami,
+które zadziałały. Wymaga uruchomionego backendu ze zmigrowaną i zaseedowaną bazą.
 
-Usage (backend and DB running, migrated and seeded):
-    cd backend && python scripts/bot_simulation.py [--base-url URL] [--scenario NAME]
+Uruchamianie: cd backend && python scripts/bot_simulation.py [--base-url URL] [--scenario NAZWA]
 
-Scenarios (default order): captcha_missing, honeypot, trap_account, brute_force,
-password_spraying. Run one with --scenario, e.g. for report screenshots.
-
-Notes:
-- CAPTCHA_ENABLED=true must be set in .env (and uvicorn restarted) for the captcha_missing
-  row; otherwise it is SKIPPED. With CAPTCHA enabled the other scenarios send --captcha-token
-  (default: dummy token accepted only by Turnstile's public test secret key); if the server
-  rejects it, those rows are SKIPPED (CAPTCHA stopped the bot first).
-- The brute force scenario locks the target account for 15 minutes; the spraying scenario
-  fills the per-IP limit window (IP_LOGIN_WINDOW_MINUTES). Behind Vite/localhost all clients
-  share the IP 127.0.0.1, so the IP limit is effectively global. Re-runs within the window
-  may report NO for earlier scenarios because the IP is already limited (429).
-- Trap login defaults to env CANARY_TRAP_LOGIN or "svc_backup". If CANARY_TRAP_URL is set
-  on the server, the Canarytoken alert is verified manually on canarytokens.org.
-- Exit code: 0 if every non-skipped scenario worked, 1 otherwise, 2 on usage/connection error.
-
-Only run this against an application you own. Remote hosts are refused unless --allow-remote.
+- Wiersz captcha_missing wymaga CAPTCHA_ENABLED=true; inaczej jest SKIPPED. Pozostałe scenariusze
+  wysyłają --captcha-token (domyślnie token testowy Turnstile); jeśli serwer go odrzuci, są
+  SKIPPED, bo bota zatrzymała już CAPTCHA.
+- brute_force blokuje konto docelowe na 15 minut, a password_spraying wyczerpuje limit IP.
+  Lokalnie wszyscy klienci mają IP 127.0.0.1, więc ponowne uruchomienie w oknie limitu może dać
+  NO dla wcześniejszych scenariuszy (429).
+- Alert Canarytokens dla konta-pułapki sprawdza się ręcznie na canarytokens.org.
+- Kod wyjścia: 0 gdy każdy wykonany scenariusz zadziałał, 1 w przeciwnym razie, 2 przy błędzie
+  połączenia lub argumentów. Hosty inne niż lokalne wymagają --allow-remote.
 """
 
 import argparse
@@ -35,7 +26,6 @@ import httpx
 
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
 GENERIC_DETAIL = "Incorrect username or password"
-SCENARIOS = ["captcha_missing", "honeypot", "trap_account", "brute_force", "password_spraying"]
 
 
 @dataclass
@@ -55,9 +45,11 @@ class Bot:
         self.args = args
         self.captcha_enabled = captcha_enabled
 
-    def login(self, login: str, password: str, **extra: object) -> tuple[int, dict]:
+    def login(
+        self, login: str, password: str, with_captcha: bool = True, **extra: object
+    ) -> tuple[int, dict]:
         payload: dict[str, object] = {"login": login, "password": password, **extra}
-        if self.captcha_enabled and self.args.captcha_token and "captcha_token" not in payload:
+        if with_captcha and self.captcha_enabled and self.args.captcha_token:
             payload["captcha_token"] = self.args.captcha_token
         response = self.client.post("/api/auth/login", json=payload)
         try:
@@ -71,26 +63,25 @@ def _code(body: dict) -> str:
     return str(body.get("code") or "-")
 
 
+def _yn(ok: bool) -> str:
+    return "YES" if ok else "NO"
+
+
 def captcha_missing(bot: Bot) -> Result:
     protection, expected = "CAPTCHA (Turnstile)", "400 captcha_failed"
     if not bot.captcha_enabled:
         return Result(
-            "captcha_missing", protection, expected, "-", "-", "SKIPPED",
+            "captcha_missing",
+            protection,
+            expected,
+            "-",
+            "-",
+            "SKIPPED",
             "CAPTCHA disabled (set CAPTCHA_ENABLED=true)",
-        )  # fmt: skip
-    status, body = _send_without_token(bot)
+        )
+    status, body = bot.login(bot.args.target_user, bot.args.wrong_password, with_captcha=False)
     ok = status == 400 and body.get("code") == "captcha_failed"
     return Result("captcha_missing", protection, expected, str(status), _code(body), _yn(ok))
-
-
-def _send_without_token(bot: Bot) -> tuple[int, dict]:
-    response = bot.client.post(
-        "/api/auth/login", json={"login": bot.args.target_user, "password": bot.args.wrong_password}
-    )
-    try:
-        return response.status_code, response.json()
-    except ValueError:
-        return response.status_code, {}
 
 
 def honeypot(bot: Bot) -> Result:
@@ -107,9 +98,14 @@ def trap_account(bot: Bot) -> Result:
     status, body = bot.login(bot.args.trap_login, bot.args.wrong_password)
     ok = status == 401 and body.get("detail") == GENERIC_DETAIL
     return Result(
-        "trap_account", "Canary trap account", "401 generic failure", str(status), _code(body),
-        _yn(ok), "Check canarytokens.org for the alert if CANARY_TRAP_URL is set",
-    )  # fmt: skip
+        "trap_account",
+        "Canary trap account",
+        "401 generic failure",
+        str(status),
+        _code(body),
+        _yn(ok),
+        "Check canarytokens.org for the alert if CANARY_TRAP_URL is set",
+    )
 
 
 def brute_force(bot: Bot) -> Result:
@@ -136,10 +132,6 @@ def password_spraying(bot: Bot) -> Result:
     status, body = last
     ok = status == 429 and body.get("code") == "too_many_attempts"
     return Result("password_spraying", protection, expected, str(status), _code(body), _yn(ok))
-
-
-def _yn(ok: bool) -> str:
-    return "YES" if ok else "NO"
 
 
 RUNNERS = {
@@ -192,27 +184,24 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--captcha-token",
         default=os.environ.get("BOT_CAPTCHA_TOKEN", "XXXX.DUMMY.TOKEN.XXXX"),
-        help="Token sent in non-CAPTCHA scenarios (default is Turnstile's test-key dummy token)",
+        help="Token sent in non-CAPTCHA scenarios (default: Turnstile test-key dummy token)",
     )
     p.add_argument("--lockout-attempts", type=int, default=6, help="Max brute force attempts")
     p.add_argument("--ip-limit-attempts", type=int, default=40, help="Max spraying attempts")
-    p.add_argument("--scenario", choices=SCENARIOS, help="Run a single scenario")
-    p.add_argument(
-        "--allow-remote",
-        action="store_true",
-        help="DANGEROUS: permit non-local hosts. Only use on systems you own; discouraged.",
-    )
+    p.add_argument("--scenario", choices=RUNNERS, help="Run a single scenario")
+    p.add_argument("--allow-remote", action="store_true", help="Allow non-local hosts")
     return p.parse_args()
 
 
 def main() -> int:
+    # Na Windowsie wyjście do potoku (np. Git Bash) domyślnie używa cp1250 zamiast UTF-8.
     for stream in (sys.stdout, sys.stderr):
         stream.reconfigure(encoding="utf-8")
     args = parse_args()
 
     host = urlparse(args.base_url).hostname or ""
     if host not in LOCAL_HOSTS and not args.allow_remote:
-        print(f"Refusing to target non-local host '{host}' (use --allow-remote at own risk).")
+        print(f"Refusing to target non-local host '{host}' (use --allow-remote).")
         return 2
 
     print("Note: behind Vite/localhost all clients share IP 127.0.0.1, so the IP limit is global.")
@@ -221,9 +210,8 @@ def main() -> int:
             config = client.get("/api/auth/captcha-config").json()
             bot = Bot(client, args, bool(config.get("enabled")))
             print(f"Target: {args.base_url} | CAPTCHA enabled: {bot.captcha_enabled}")
-            names = [args.scenario] if args.scenario else SCENARIOS
             results = []
-            for name in names:
+            for name in [args.scenario] if args.scenario else RUNNERS:
                 print(f"Running scenario: {name}")
                 results.append(_skip_if_captcha_blocked(RUNNERS[name](bot)))
     except httpx.HTTPError as exc:
