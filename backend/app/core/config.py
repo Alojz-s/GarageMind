@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     database_url: str
     database_connect_timeout: int = 3
 
+    # Cloudflare Turnstile. Domyślne klucze to publiczne klucze testowe (zawsze przechodzą).
+    captcha_enabled: bool = False
+    turnstile_site_key: str = "1x00000000000000000000AA"
+    turnstile_secret_key: SecretStr = SecretStr("1x0000000000000000000000000000000AA")
+
     # Wymagane tylko przez scripts/seed.py.
     admin_initial_password: SecretStr | None = None
     seed_user_password: SecretStr | None = None
