@@ -3,6 +3,8 @@ import { Navigate } from 'react-router'
 import { useAuth } from '../auth/AuthContext'
 import AppLoading from '../components/AppLoading'
 import Logo from '../components/Logo'
+import TurnstileWidget from '../components/TurnstileWidget'
+import { useCaptchaConfig } from '../auth/useCaptchaConfig'
 import { postAuthPath } from '../auth/paths'
 import { ApiError } from '../api/client'
 import { formatApiError } from '../messages/apiErrors'
@@ -18,6 +20,10 @@ export default function LoginPage() {
   const { user, loading, notice, login } = useAuth()
   const [loginName, setLoginName] = useState('')
   const [password, setPassword] = useState('')
+  const [website, setWebsite] = useState('')
+  const captcha = useCaptchaConfig()
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaReset, setCaptchaReset] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [lockedUntil, setLockedUntil] = useState<number | null>(null)
@@ -47,7 +53,7 @@ export default function LoginPage() {
     setError(null)
     setSubmitting(true)
     try {
-      await login(loginName, password)
+      await login(loginName, password, website, captchaToken)
     } catch (err) {
       if (err instanceof ApiError && err.code === 'account_locked' && err.lockedSeconds) {
         setLockedUntil(Date.now() + err.lockedSeconds * 1000)
@@ -55,6 +61,7 @@ export default function LoginPage() {
       }
       setError(formatApiError(err))
       setPassword('')
+      setCaptchaReset((n) => n + 1)
     } finally {
       setSubmitting(false)
     }
@@ -99,6 +106,26 @@ export default function LoginPage() {
                   required
                 />
               </label>
+              <div className="honeypot-field" aria-hidden="true">
+                <label>
+                  Website
+                  <input
+                    name="website"
+                    type="text"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                  />
+                </label>
+              </div>
+              {captcha?.enabled && captcha.site_key && (
+                <TurnstileWidget
+                  siteKey={captcha.site_key}
+                  onToken={setCaptchaToken}
+                  resetKey={captchaReset}
+                />
+              )}
               {lockedUntil !== null && (
                 <p className="garagemind-login__error" role="alert">
                   Account temporarily locked. Try again in {formatRemaining(remaining)}.
@@ -112,7 +139,9 @@ export default function LoginPage() {
               <button
                 type="submit"
                 className="gm-btn gm-btn--block garagemind-login__submit"
-                disabled={submitting || lockedUntil !== null}
+                disabled={
+                  submitting || lockedUntil !== null || (captcha?.enabled === true && !captchaToken)
+                }
               >
                 {submitting ? 'Signing in…' : 'Sign in'}
               </button>

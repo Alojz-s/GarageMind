@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -14,9 +14,11 @@ from app.api.deps import (
     password_change_required,
     reject_restricted_session,
 )
+from app.core.config import Settings, get_settings
 from app.core.database import get_db
 from app.models import PasswordHistory, User
 from app.schemas.auth import (
+    CaptchaConfigResponse,
     ChangePasswordRequest,
     LoginRequest,
     MeResponse,
@@ -32,6 +34,7 @@ from app.services.one_time_passwords import (
 from app.services.password_policy import MAX_PASSWORD_LENGTH, describe_policy, validate_password
 from app.services.passwords import DUMMY_PASSWORD_HASH, hash_password, verify_password
 from app.services.sessions import create_session, delete_session
+from app.services.turnstile import TurnstileVerifier, check_captcha, verify_turnstile_token
 
 LOGIN_FAILED = "Incorrect username or password"
 
@@ -50,22 +53,81 @@ def _me(db: Session, user: User) -> MeResponse:
     )
 
 
+def get_turnstile_verifier(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> TurnstileVerifier:
+    """Dependency overridden in tests (no network)."""
+    return lambda token, remote_ip: verify_turnstile_token(settings, token, remote_ip)
+
+
+def _client_ip(request: Request) -> str | None:
+    return request.client.host if request.client else None
+
+
+def _require_captcha(
+    settings: Settings,
+    verifier: TurnstileVerifier,
+    token: str | None,
+    request: Request,
+) -> None:
+    if not check_captcha(settings, verifier, token, _client_ip(request)):
+        raise ApiError(status.HTTP_400_BAD_REQUEST, "CAPTCHA verification failed", "captcha_failed")
+
+
+def _check_honeypot(body: LoginRequest) -> None:
+    if body.website.strip():
+        # TODO(M2-D): record the attempt in login_failures.
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, LOGIN_FAILED)
+
+
+def _check_ip_limit(request: Request, db: Session) -> None:
+    """M2-D: per-IP failed login limit (429 too_many_attempts). No-op for now."""
+
+
+def _check_canary_trap(body: LoginRequest) -> None:
+    """M2-C: trap account (CANARY_TRAP_LOGIN) fires the token and ends in 401. No-op for now."""
+
+
+def _check_account_lock(user: User | None) -> None:
+    if user is None:
+        return
+    remaining = locked_seconds(user)
+    if remaining > 0:
+        raise ApiError(
+            status.HTTP_423_LOCKED,
+            "Account temporarily locked due to too many failed login attempts",
+            "account_locked",
+            locked_seconds=remaining,
+        )
+
+
+@router.get("/captcha-config")
+def captcha_config(settings: Annotated[Settings, Depends(get_settings)]) -> CaptchaConfigResponse:
+    return CaptchaConfigResponse(
+        enabled=settings.captcha_enabled,
+        site_key=settings.turnstile_site_key if settings.captcha_enabled else None,
+    )
+
+
 @router.post("/login")
 def login(
-    body: LoginRequest, response: Response, db: Annotated[Session, Depends(get_db)]
+    body: LoginRequest,
+    request: Request,
+    response: Response,
+    db: Annotated[Session, Depends(get_db)],
+    settings: Annotated[Settings, Depends(get_settings)],
+    verifier: Annotated[TurnstileVerifier, Depends(get_turnstile_verifier)],
 ) -> MeResponse:
+    _check_honeypot(body)  # 1
+    _check_ip_limit(request, db)  # 2 (M2-D)
+    _require_captcha(settings, verifier, body.captcha_token, request)  # 3
+    _check_canary_trap(body)  # 4 (M2-C)
+
     user = db.scalar(select(User).where(User.login == body.login))
     if user is not None and (user.is_blocked or user.deleted_at is not None):
         user = None
-    if user is not None:
-        remaining = locked_seconds(user)
-        if remaining > 0:
-            raise ApiError(
-                status.HTTP_423_LOCKED,
-                "Account temporarily locked due to too many failed login attempts",
-                "account_locked",
-                locked_seconds=remaining,
-            )
+    _check_account_lock(user)  # 5
+    # 6: password, one-time password, failed-login counter
     password_hash = user.password_hash if user and user.password_hash else DUMMY_PASSWORD_HASH
     password_ok = verify_password(body.password, password_hash)
     otp_ok = not password_ok and try_login_with_one_time_password(db, user, body.password)
@@ -107,8 +169,14 @@ def me(user: CurrentUser, db: Annotated[Session, Depends(get_db)]) -> MeResponse
     responses={422: {"model": PasswordPolicyErrorResponse}},
 )
 def change_password(
-    body: ChangePasswordRequest, user: CurrentUser, db: Annotated[Session, Depends(get_db)]
+    body: ChangePasswordRequest,
+    request: Request,
+    user: CurrentUser,
+    db: Annotated[Session, Depends(get_db)],
+    settings: Annotated[Settings, Depends(get_settings)],
+    verifier: Annotated[TurnstileVerifier, Depends(get_turnstile_verifier)],
 ) -> Response:
+    _require_captcha(settings, verifier, body.captcha_token, request)
     if body.new_password != body.new_password_confirm:
         raise ApiError(
             status.HTTP_400_BAD_REQUEST,
