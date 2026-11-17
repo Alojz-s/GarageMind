@@ -1,4 +1,5 @@
 from app.models.band import Band
+from app.models.login_failure import LoginFailure
 from app.models.one_time_password import OneTimePassword
 from app.models.password_history import PasswordHistory
 from app.models.role import Permission, Role, role_permissions
@@ -10,6 +11,7 @@ __all__ = [
     "ADMIN_LOGIN",
     "SECURITY_SETTINGS_ID",
     "Band",
+    "LoginFailure",
     "OneTimePassword",
     "PasswordHistory",
     "Permission",

@@ -12,6 +12,7 @@ const API_ERROR_BY_CODE: Record<string, string> = {
   login_taken: 'Username is already taken',
   band_not_found: 'Band not found',
   captcha_failed: 'CAPTCHA verification failed. Please try again.',
+  too_many_attempts: 'Too many failed login attempts from this address. Try again later.',
   account_locked: 'Account temporarily locked due to too many failed login attempts',
 }
 

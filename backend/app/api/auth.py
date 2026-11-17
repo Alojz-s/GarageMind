@@ -1,5 +1,5 @@
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, NoReturn
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
@@ -32,6 +32,7 @@ from app.services.canary_trap import (
     is_trap_login,
     trigger_canary_in_background,
 )
+from app.services.login_ip_limit import is_ip_rate_limited, record_login_failure
 from app.services.login_lockout import locked_seconds, register_failed_login, reset_lockout
 from app.services.one_time_passwords import (
     try_login_with_one_time_password,
@@ -80,14 +81,33 @@ def _require_captcha(
         raise ApiError(status.HTTP_400_BAD_REQUEST, "CAPTCHA verification failed", "captcha_failed")
 
 
-def _check_honeypot(body: LoginRequest) -> None:
+def _reject_login(request: Request, db: Session, settings: Settings) -> NoReturn:
+    """Records a failed attempt for the client IP (per-IP limit) and ends in the usual 401.
+
+    Without a client address nothing is recorded (and such requests are never limited).
+    """
+    record_login_failure(db, _client_ip(request), settings.ip_login_window_minutes)
+    db.commit()
+    raise HTTPException(status.HTTP_401_UNAUTHORIZED, LOGIN_FAILED)
+
+
+def _check_honeypot(body: LoginRequest, request: Request, db: Session, settings: Settings) -> None:
     if body.website.strip():
-        # TODO(M2-D): record the attempt in login_failures.
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, LOGIN_FAILED)
+        _reject_login(request, db, settings)
 
 
-def _check_ip_limit(request: Request, db: Session) -> None:
-    """M2-D: per-IP failed login limit (429 too_many_attempts). No-op for now."""
+def _check_ip_limit(request: Request, db: Session, settings: Settings) -> None:
+    """Too many failed logins from this IP (any username) -> 429 too_many_attempts.
+
+    Behind the Vite dev proxy every client is 127.0.0.1, so locally the limit is global.
+    """
+    if is_ip_rate_limited(db, settings, _client_ip(request)):
+        db.commit()  # keep the pruning
+        raise ApiError(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            "Too many failed login attempts from this address. Try again later.",
+            "too_many_attempts",
+        )
 
 
 def get_canary_trigger() -> CanaryTrigger:
@@ -95,14 +115,20 @@ def get_canary_trigger() -> CanaryTrigger:
     return trigger_canary_in_background
 
 
-def _check_canary_trap(body: LoginRequest, settings: Settings, trigger: CanaryTrigger) -> None:
+def _check_canary_trap(
+    body: LoginRequest,
+    request: Request,
+    db: Session,
+    settings: Settings,
+    trigger: CanaryTrigger,
+) -> None:
     """Trap account (CANARY_TRAP_LOGIN): fires the Canarytoken and ends in the usual 401.
 
     Exits before the user lookup, so no failed-login counter is touched.
     """
     if is_trap_login(settings, body.login):
         fire_trap(settings, trigger)
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, LOGIN_FAILED)
+        _reject_login(request, db, settings)
 
 
 def _check_account_lock(user: User | None) -> None:
@@ -136,10 +162,10 @@ def login(
     verifier: Annotated[TurnstileVerifier, Depends(get_turnstile_verifier)],
     canary_trigger: Annotated[CanaryTrigger, Depends(get_canary_trigger)],
 ) -> MeResponse:
-    _check_honeypot(body)  # 1
-    _check_ip_limit(request, db)  # 2 (M2-D)
+    _check_honeypot(body, request, db, settings)  # 1
+    _check_ip_limit(request, db, settings)  # 2 (M2-D)
     _require_captcha(settings, verifier, body.captcha_token, request)  # 3
-    _check_canary_trap(body, settings, canary_trigger)  # 4 (M2-C)
+    _check_canary_trap(body, request, db, settings, canary_trigger)  # 4 (M2-C)
 
     user = db.scalar(select(User).where(User.login == body.login))
     if user is not None and (user.is_blocked or user.deleted_at is not None):
@@ -152,8 +178,7 @@ def login(
     if user is None or not (password_ok or otp_ok):
         if user is not None:
             register_failed_login(user, get_security_settings(db).max_failed_logins)
-            db.commit()
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, LOGIN_FAILED)
+        _reject_login(request, db, settings)
 
     reset_lockout(user)
     if password_change_required(user, get_security_settings(db)):
