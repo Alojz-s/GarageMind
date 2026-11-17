@@ -24,6 +24,7 @@ export interface SecuritySettings {
   date_rule_enabled: boolean
   password_validity_days: number
   idle_timeout_minutes: number
+  max_failed_logins: number
 }
 
 export function fetchRoles(): Promise<Role[]> {

@@ -7,12 +7,20 @@ export class ApiError extends Error {
   readonly status: number
   readonly code?: string
   readonly violations: Violation[]
+  readonly lockedSeconds?: number
 
-  constructor(status: number, message: string, code?: string, violations: Violation[] = []) {
+  constructor(
+    status: number,
+    message: string,
+    code?: string,
+    violations: Violation[] = [],
+    lockedSeconds?: number,
+  ) {
     super(message)
     this.status = status
     this.code = code
     this.violations = violations
+    this.lockedSeconds = lockedSeconds
   }
 }
 
@@ -45,9 +53,10 @@ export async function apiRequest<T>(
     detail?: unknown
     code?: string
     violations?: Violation[]
+    locked_seconds?: number
   } | null
   if (response.status === 401) onUnauthorized(error?.code)
   const message =
     typeof error?.detail === 'string' ? error.detail : `Server error (HTTP ${response.status})`
-  throw new ApiError(response.status, message, error?.code, error?.violations)
+  throw new ApiError(response.status, message, error?.code, error?.violations, error?.locked_seconds)
 }

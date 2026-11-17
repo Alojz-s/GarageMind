@@ -11,6 +11,7 @@ const API_ERROR_BY_CODE: Record<string, string> = {
   user_not_found: 'User not found',
   login_taken: 'Username is already taken',
   band_not_found: 'Band not found',
+  account_locked: 'Account temporarily locked due to too many failed login attempts',
 }
 
 const VIOLATION_BY_CODE: Record<string, string> = {
@@ -23,6 +24,7 @@ const VIOLATION_BY_CODE: Record<string, string> = {
   invalid_min_password_length: 'Minimum password length is out of range.',
   invalid_password_validity_days: 'Password validity (days) is out of range.',
   invalid_idle_timeout: 'Session idle timeout is out of range.',
+  invalid_max_failed_logins: 'Failed login limit is out of range.',
 }
 
 const ROLE_LABELS: Record<string, string> = {
