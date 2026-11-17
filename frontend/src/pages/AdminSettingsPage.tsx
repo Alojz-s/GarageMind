@@ -6,19 +6,21 @@ import { useAuth } from '../auth/AuthContext'
 import Alert from '../components/Alert'
 import PageHeader from '../components/PageHeader'
 
-type NumberField = 'min_password_length' | 'password_validity_days' | 'idle_timeout_minutes'
+type NumberField = 'min_password_length' | 'password_validity_days' | 'idle_timeout_minutes' | 'max_failed_logins'
 
 interface FormState {
   min_password_length: string
   date_rule_enabled: boolean
   password_validity_days: string
   idle_timeout_minutes: string
+  max_failed_logins: string
 }
 
 const NUMBER_FIELDS: { name: NumberField; label: string; min: number; max?: number }[] = [
   { name: 'min_password_length', label: 'Minimum password length', min: 15, max: 64 },
   { name: 'password_validity_days', label: 'Password validity (days, 0 = off)', min: 0 },
   { name: 'idle_timeout_minutes', label: 'Session idle timeout (min)', min: 1, max: 120 },
+  { name: 'max_failed_logins', label: 'Failed logins before lockout (15 min)', min: 1, max: 20 },
 ]
 
 function toForm(settings: SecuritySettings): FormState {
@@ -27,6 +29,7 @@ function toForm(settings: SecuritySettings): FormState {
     date_rule_enabled: settings.date_rule_enabled,
     password_validity_days: String(settings.password_validity_days),
     idle_timeout_minutes: String(settings.idle_timeout_minutes),
+    max_failed_logins: String(settings.max_failed_logins),
   }
 }
 
@@ -57,6 +60,7 @@ export default function AdminSettingsPage() {
         date_rule_enabled: form.date_rule_enabled,
         password_validity_days: Number(form.password_validity_days),
         idle_timeout_minutes: Number(form.idle_timeout_minutes),
+        max_failed_logins: Number(form.max_failed_logins),
       })
       setForm(toForm(settings))
       setSaved(true)
