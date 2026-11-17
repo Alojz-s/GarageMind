@@ -22,10 +22,18 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false))
   }, [])
 
-  const login = useCallback(async (loginName: string, password: string) => {
-    setNotice(null)
-    setUser(await apiLogin(loginName, password))
-  }, [])
+  const login = useCallback(
+    async (
+      loginName: string,
+      password: string,
+      website = '',
+      captchaToken: string | null = null,
+    ) => {
+      setNotice(null)
+      setUser(await apiLogin(loginName, password, website, captchaToken))
+    },
+    [],
+  )
 
   const logout = useCallback(async (reason?: string) => {
     setUser(null)

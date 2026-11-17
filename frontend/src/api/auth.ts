@@ -13,8 +13,27 @@ export function fetchMe(): Promise<Me> {
   return apiRequest<Me>('GET', '/auth/me')
 }
 
-export function login(login: string, password: string): Promise<Me> {
-  return apiRequest<Me>('POST', '/auth/login', { login, password })
+export interface CaptchaConfig {
+  enabled: boolean
+  site_key: string | null
+}
+
+export function fetchCaptchaConfig(): Promise<CaptchaConfig> {
+  return apiRequest<CaptchaConfig>('GET', '/auth/captcha-config', undefined, 'omit')
+}
+
+export function login(
+  login: string,
+  password: string,
+  website = '',
+  captchaToken: string | null = null,
+): Promise<Me> {
+  return apiRequest<Me>('POST', '/auth/login', {
+    login,
+    password,
+    website,
+    captcha_token: captchaToken,
+  })
 }
 
 export function logout(): Promise<void> {
@@ -37,10 +56,12 @@ export function changePassword(
   oldPassword: string,
   newPassword: string,
   newPasswordConfirm: string,
+  captchaToken: string | null = null,
 ): Promise<void> {
   return apiRequest<void>('POST', '/auth/change-password', {
     old_password: oldPassword,
     new_password: newPassword,
     new_password_confirm: newPasswordConfirm,
+    captcha_token: captchaToken,
   })
 }

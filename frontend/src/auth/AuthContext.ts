@@ -6,7 +6,12 @@ export interface AuthContextValue {
   loading: boolean
   /** Komunikat dla strony logowania, np. o wylogowaniu z powodu bezczynności. */
   notice: string | null
-  login: (login: string, password: string) => Promise<void>
+  login: (
+    login: string,
+    password: string,
+    website?: string,
+    captchaToken?: string | null,
+  ) => Promise<void>
   logout: (notice?: string) => Promise<void>
   refreshUser: () => Promise<void>
 }
