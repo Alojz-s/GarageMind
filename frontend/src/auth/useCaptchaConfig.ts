@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
-import { fetchCaptchaConfig, type CaptchaConfig } from "../api/auth";
+import { useEffect, useState } from 'react'
+import { fetchCaptchaConfig, type CaptchaConfig } from '../api/auth'
 
-// null = not loaded yet (or request failed); the widget renders only when enabled.
+// null = konfiguracja jeszcze się ładuje; błąd pobrania traktujemy jak wyłączoną CAPTCHA.
 export function useCaptchaConfig(): CaptchaConfig | null {
-  const [config, setConfig] = useState<CaptchaConfig | null>(null);
+  const [config, setConfig] = useState<CaptchaConfig | null>(null)
   useEffect(() => {
     fetchCaptchaConfig()
       .then(setConfig)
-      .catch(() => setConfig({ enabled: false, site_key: null }));
-  }, []);
-  return config;
+      .catch(() => setConfig({ enabled: false, site_key: null }))
+  }, [])
+  return config
 }

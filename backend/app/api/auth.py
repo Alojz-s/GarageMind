@@ -63,7 +63,6 @@ def _me(db: Session, user: User) -> MeResponse:
 def get_turnstile_verifier(
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> TurnstileVerifier:
-    """Dependency overridden in tests (no network)."""
     return lambda token, remote_ip: verify_turnstile_token(settings, token, remote_ip)
 
 
@@ -82,10 +81,6 @@ def _require_captcha(
 
 
 def _reject_login(request: Request, db: Session, settings: Settings) -> NoReturn:
-    """Records a failed attempt for the client IP (per-IP limit) and ends in the usual 401.
-
-    Without a client address nothing is recorded (and such requests are never limited).
-    """
     record_login_failure(db, _client_ip(request), settings.ip_login_window_minutes)
     db.commit()
     raise HTTPException(status.HTTP_401_UNAUTHORIZED, LOGIN_FAILED)
@@ -97,12 +92,8 @@ def _check_honeypot(body: LoginRequest, request: Request, db: Session, settings:
 
 
 def _check_ip_limit(request: Request, db: Session, settings: Settings) -> None:
-    """Too many failed logins from this IP (any username) -> 429 too_many_attempts.
-
-    Behind the Vite dev proxy every client is 127.0.0.1, so locally the limit is global.
-    """
     if is_ip_rate_limited(db, settings, _client_ip(request)):
-        db.commit()  # keep the pruning
+        db.commit()  # utrwala usunięcie starych wpisów mimo wyjątku
         raise ApiError(
             status.HTTP_429_TOO_MANY_REQUESTS,
             "Too many failed login attempts from this address. Try again later.",
@@ -111,7 +102,6 @@ def _check_ip_limit(request: Request, db: Session, settings: Settings) -> None:
 
 
 def get_canary_trigger() -> CanaryTrigger:
-    """Dependency overridden in tests (no network)."""
     return trigger_canary_in_background
 
 
@@ -122,10 +112,6 @@ def _check_canary_trap(
     settings: Settings,
     trigger: CanaryTrigger,
 ) -> None:
-    """Trap account (CANARY_TRAP_LOGIN): fires the Canarytoken and ends in the usual 401.
-
-    Exits before the user lookup, so no failed-login counter is touched.
-    """
     if is_trap_login(settings, body.login):
         fire_trap(settings, trigger)
         _reject_login(request, db, settings)
@@ -162,16 +148,16 @@ def login(
     verifier: Annotated[TurnstileVerifier, Depends(get_turnstile_verifier)],
     canary_trigger: Annotated[CanaryTrigger, Depends(get_canary_trigger)],
 ) -> MeResponse:
-    _check_honeypot(body, request, db, settings)  # 1
-    _check_ip_limit(request, db, settings)  # 2 (M2-D)
-    _require_captcha(settings, verifier, body.captcha_token, request)  # 3
-    _check_canary_trap(body, request, db, settings, canary_trigger)  # 4 (M2-C)
+    _check_honeypot(body, request, db, settings)
+    _check_ip_limit(request, db, settings)
+    _require_captcha(settings, verifier, body.captcha_token, request)
+    # Przed wyszukaniem konta: próby na pułapce nie zwiększają licznika i nie blokują jej.
+    _check_canary_trap(body, request, db, settings, canary_trigger)
 
     user = db.scalar(select(User).where(User.login == body.login))
     if user is not None and (user.is_blocked or user.deleted_at is not None):
         user = None
-    _check_account_lock(user)  # 5
-    # 6: password, one-time password, failed-login counter
+    _check_account_lock(user)
     password_hash = user.password_hash if user and user.password_hash else DUMMY_PASSWORD_HASH
     password_ok = verify_password(body.password, password_hash)
     otp_ok = not password_ok and try_login_with_one_time_password(db, user, body.password)

@@ -93,7 +93,7 @@ def client(db_session: Session) -> Iterator[TestClient]:
 
     seed(db_session, ADMIN_PASSWORD, PASSWORD)
     app.dependency_overrides[get_db] = lambda: db_session
-    # CAPTCHA is off by default regardless of .env; CAPTCHA tests override settings.
+    # Niezależnie od .env: bez CAPTCHA i praktycznie bez limitu IP; testy tych funkcji to nadpisują.
     app.dependency_overrides[get_settings] = lambda: get_settings().model_copy(
         update={"captcha_enabled": False, "ip_login_max_failures": 1000}
     )
