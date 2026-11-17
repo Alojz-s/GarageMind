@@ -3,6 +3,7 @@
 Uruchamianie: cd backend && python scripts/seed.py
 """
 
+import secrets
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -62,6 +63,15 @@ def seed(db: Session, admin_password: str, user_password: str) -> None:
     _ensure_user(db, ADMIN_LOGIN, roles["Administrator"], admin_password, must_change=True)
     for login, role_name in TEST_USERS.items():
         _ensure_user(db, login, roles[role_name], user_password, must_change=False)
+
+    # Trap account for Canarytokens: random password nobody knows, low-privilege role.
+    _ensure_user(
+        db,
+        get_settings().canary_trap_login,
+        roles["Czytelnik"],
+        secrets.token_urlsafe(32),
+        must_change=False,
+    )
 
     _ensure_bands(db)
     db.commit()
