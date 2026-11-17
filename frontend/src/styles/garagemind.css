@@ -779,3 +779,17 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+
+/* Login honeypot: off-screen rather than display:none (some bots skip hidden fields). */
+.honeypot-field {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.garagemind-login__form .turnstile-widget {
+  display: flex;
+  justify-content: center;
+}
