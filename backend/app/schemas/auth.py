@@ -4,6 +4,13 @@ from pydantic import BaseModel
 class LoginRequest(BaseModel):
     login: str
     password: str
+    website: str = ""  # honeypot: ukryte pole, boty je wypełniają
+    captcha_token: str | None = None
+
+
+class CaptchaConfigResponse(BaseModel):
+    enabled: bool
+    site_key: str | None
 
 
 class MeResponse(BaseModel):
@@ -19,6 +26,7 @@ class ChangePasswordRequest(BaseModel):
     old_password: str
     new_password: str
     new_password_confirm: str
+    captcha_token: str | None = None
 
 
 class PolicyViolation(BaseModel):
