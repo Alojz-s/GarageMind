@@ -13,6 +13,8 @@ MIN_PASSWORD_LENGTH_FLOOR = 15
 MAX_PASSWORD_VALIDITY_DAYS = 3650
 MIN_IDLE_TIMEOUT_MINUTES = 1
 MAX_IDLE_TIMEOUT_MINUTES = 120
+MIN_FAILED_LOGINS = 1
+MAX_FAILED_LOGINS = 20
 
 
 def _between(low: int, high: int, code: str, message: str) -> AfterValidator:
@@ -61,6 +63,7 @@ class SecuritySettingsResponse(BaseModel):
     date_rule_enabled: bool
     password_validity_days: int
     idle_timeout_minutes: int
+    max_failed_logins: int
 
 
 class SecuritySettingsUpdate(BaseModel):
@@ -92,5 +95,14 @@ class SecuritySettingsUpdate(BaseModel):
             "invalid_idle_timeout",
             f"Idle timeout must be between {MIN_IDLE_TIMEOUT_MINUTES} "
             f"and {MAX_IDLE_TIMEOUT_MINUTES} minutes.",
+        ),
+    ]
+    max_failed_logins: Annotated[
+        int,
+        _between(
+            MIN_FAILED_LOGINS,
+            MAX_FAILED_LOGINS,
+            "invalid_max_failed_logins",
+            f"Failed login limit must be between {MIN_FAILED_LOGINS} and {MAX_FAILED_LOGINS}.",
         ),
     ]
