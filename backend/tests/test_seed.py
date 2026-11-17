@@ -29,7 +29,7 @@ def test_seed_is_idempotent(db_session: Session) -> None:
     seed(db_session, ADMIN_PASSWORD, USER_PASSWORD)
 
     assert {model: _count(db_session, model) for model in models} == counts
-    assert counts == {User: 3, Role: 4, Permission: 4, Band: 3, SecuritySettings: 1}
+    assert counts == {User: 4, Role: 4, Permission: 4, Band: 3, SecuritySettings: 1}
 
 
 def test_seed_users(db_session: Session) -> None:
