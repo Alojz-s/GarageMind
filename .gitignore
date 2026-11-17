@@ -233,3 +233,6 @@ AGENTS.md
 node_modules/
 dist/
 *.tsbuildinfo
+
+# Local files with live Canarytoken keys
+deploy/*.local.ini
