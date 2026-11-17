@@ -103,6 +103,7 @@ def _ensure_security_settings(db: Session) -> None:
                 date_rule_enabled=False,
                 password_validity_days=0,
                 idle_timeout_minutes=15,
+                max_failed_logins=5,
             )
         )
 

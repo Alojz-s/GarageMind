@@ -16,15 +16,17 @@ SESSION_COOKIE = "garagemind_session"
 class ApiError(Exception):
     """Błąd API z polem `code` w odpowiedzi: {"detail": ..., "code": ...}."""
 
-    def __init__(self, status_code: int, detail: str, code: str) -> None:
+    def __init__(self, status_code: int, detail: str, code: str, **extra: Any) -> None:
         self.status_code = status_code
         self.detail = detail
         self.code = code
+        self.extra = extra
 
 
 def api_error_handler(_request: Request, exc: ApiError) -> JSONResponse:
     return JSONResponse(
-        status_code=exc.status_code, content={"detail": exc.detail, "code": exc.code}
+        status_code=exc.status_code,
+        content={"detail": exc.detail, "code": exc.code, **exc.extra},
     )
 
 

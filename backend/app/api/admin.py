@@ -19,6 +19,7 @@ from app.schemas.admin import (
     UserListItem,
     UserUpdate,
 )
+from app.services.login_lockout import reset_lockout
 from app.services.one_time_passwords import (
     issue_one_time_password,
     reset_account_with_one_time_password,
@@ -111,6 +112,7 @@ def block_user(user_id: int, db: Annotated[Session, Depends(get_db)]) -> UserLis
 def unblock_user(user_id: int, db: Annotated[Session, Depends(get_db)]) -> UserListItem:
     user = _get_managed_user(db, user_id, ADMIN_MODIFY)
     user.is_blocked = False
+    reset_lockout(user)
     db.commit()
     return _user_item(user)
 

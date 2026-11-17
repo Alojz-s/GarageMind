@@ -1,11 +1,18 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router'
 import { useAuth } from '../auth/AuthContext'
 import AppLoading from '../components/AppLoading'
 import Logo from '../components/Logo'
 import { postAuthPath } from '../auth/paths'
+import { ApiError } from '../api/client'
 import { formatApiError } from '../messages/apiErrors'
 import '../styles/garagemind.css'
+
+function formatRemaining(seconds: number): string {
+  const minutes = Math.floor(seconds / 60)
+  const rest = String(seconds % 60).padStart(2, '0')
+  return `${minutes}:${rest}`
+}
 
 export default function LoginPage() {
   const { user, loading, notice, login } = useAuth()
@@ -13,6 +20,24 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null)
+  const [remaining, setRemaining] = useState(0)
+
+  useEffect(() => {
+    if (lockedUntil === null) return
+    const tick = () => {
+      const left = Math.ceil((lockedUntil - Date.now()) / 1000)
+      if (left <= 0) {
+        setLockedUntil(null)
+        setRemaining(0)
+      } else {
+        setRemaining(left)
+      }
+    }
+    tick()
+    const timer = window.setInterval(tick, 1000)
+    return () => window.clearInterval(timer)
+  }, [lockedUntil])
 
   if (loading) return <AppLoading variant="landing" />
   if (user) return <Navigate to={postAuthPath(user)} replace />
@@ -24,6 +49,10 @@ export default function LoginPage() {
     try {
       await login(loginName, password)
     } catch (err) {
+      if (err instanceof ApiError && err.code === 'account_locked' && err.lockedSeconds) {
+        setLockedUntil(Date.now() + err.lockedSeconds * 1000)
+        setRemaining(err.lockedSeconds)
+      }
       setError(formatApiError(err))
       setPassword('')
     } finally {
@@ -70,7 +99,12 @@ export default function LoginPage() {
                   required
                 />
               </label>
-              {error && (
+              {lockedUntil !== null && (
+                <p className="garagemind-login__error" role="alert">
+                  Account temporarily locked. Try again in {formatRemaining(remaining)}.
+                </p>
+              )}
+              {error && lockedUntil === null && (
                 <p className="garagemind-login__error" role="alert">
                   {error}
                 </p>
@@ -78,7 +112,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 className="gm-btn gm-btn--block garagemind-login__submit"
-                disabled={submitting}
+                disabled={submitting || lockedUntil !== null}
               >
                 {submitting ? 'Signing in…' : 'Sign in'}
               </button>

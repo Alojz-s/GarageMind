@@ -1,3 +1,5 @@
+from datetime import UTC, datetime, timedelta
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
@@ -193,3 +195,16 @@ def test_reset_invalidates_password_and_closes_sessions(
     )
     assert response.status_code == 401
     assert response.json() == LOGIN_FAILED
+
+
+def test_unblock_clears_temporary_lock(admin_client: TestClient, db_session: Session) -> None:
+    target = _user(db_session, "redaktor")
+    target.locked_until = datetime.now(UTC) + timedelta(minutes=10)
+    target.failed_login_count = 2
+    db_session.flush()
+
+    assert admin_client.post(f"/api/admin/users/{target.id}/unblock").status_code == 200
+
+    db_session.refresh(target)
+    assert target.locked_until is None
+    assert target.failed_login_count == 0
