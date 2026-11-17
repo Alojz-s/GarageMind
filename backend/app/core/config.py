@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     turnstile_site_key: str = "1x00000000000000000000AA"
     turnstile_secret_key: SecretStr = SecretStr("1x0000000000000000000000000000000AA")
 
+    # Canarytokens: konto-pułapka. Pusty URL = brak wywołania sieciowego.
+    canary_trap_login: str = "svc_backup"
+    canary_trap_url: str = ""
+
     # Wymagane tylko przez scripts/seed.py.
     admin_initial_password: SecretStr | None = None
     seed_user_password: SecretStr | None = None
