@@ -22,6 +22,9 @@ class User(Base):
     is_blocked: Mapped[bool] = mapped_column(server_default=false())
     must_change_password: Mapped[bool] = mapped_column(server_default=false())
     password_changed_at: Mapped[datetime | None]
+    # Czasowa blokada po błędnych logowaniach (osobna od ręcznej blokady is_blocked).
+    failed_login_count: Mapped[int] = mapped_column(server_default="0")
+    locked_until: Mapped[datetime | None]
     deleted_at: Mapped[datetime | None]
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())

@@ -15,6 +15,7 @@ class SecuritySettings(Base):
         CheckConstraint("min_password_length >= 15", name="min_password_length"),
         CheckConstraint("password_validity_days >= 0", name="password_validity_days"),
         CheckConstraint("idle_timeout_minutes BETWEEN 1 AND 120", name="idle_timeout_minutes"),
+        CheckConstraint("max_failed_logins BETWEEN 1 AND 20", name="max_failed_logins"),
     )
 
     id: Mapped[int] = mapped_column(
@@ -25,4 +26,5 @@ class SecuritySettings(Base):
     # 0 = ważność hasła wyłączona.
     password_validity_days: Mapped[int] = mapped_column(server_default="0")
     idle_timeout_minutes: Mapped[int] = mapped_column(server_default="15")
+    max_failed_logins: Mapped[int] = mapped_column(server_default="5")
     updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
